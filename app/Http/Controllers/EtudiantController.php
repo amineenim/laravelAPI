@@ -9,6 +9,9 @@ use App\Http\Resources\EtudiantResource;
 use App\Models\EtudiantCours;
 use App\Models\Cours;
 use App\Models\Utilisateur;
+use App\Models\Filiere;
+use App\Models\EducationalUnit;
+use App\Models\Edt;
 
 class EtudiantController extends Controller
 {
@@ -20,6 +23,8 @@ class EtudiantController extends Controller
     public function index()
     {
         //this function returns all students in Database 
+        $students = Etudiant::all();
+        return ['students' => $students];
         
     }
 
@@ -50,10 +55,29 @@ class EtudiantController extends Controller
      * @param  \App\Models\Student  $student
      * @return \Illuminate\Http\Response
      */
-    public function show(Student $student)
+    public function show(Etudiant $student)
     {
         //this method returns a single student with his id 
-        return new EtudiantResource($student);
+        $etudiant = Etudiant::find($student)[0];
+        // get all other data about student from utilisateurs table
+        $user = Utilisateur::find($student)[0];
+        $nom_etudiant = $user['nom']." ".$user["prenom"];
+        $email = $user["email"];
+        $telephone = $user["tel"];
+        $diplome = $etudiant["diplome_etudiant"];
+        $filiereId = $etudiant['id_filiere'];
+        $filiere = Filiere::find($filiereId);
+        $nomFiliere = $filiere["nom_filiere"];
+        $niveau = $filiere["niveau"];
+        return (object)[
+            'nom_prenom' => $nom_etudiant,
+            'email_etudiant' => $email,
+            'phone_etudiant' => $telephone,
+            'diplome' => $diplome,
+            'filiere' => $nomFiliere,
+            'niveau' => $niveau
+        ];
+
     }
 
     /**
@@ -127,7 +151,7 @@ class EtudiantController extends Controller
             array_push($studentGrades,$cours_note);
             
         }
-        return $studentGrades;
+        return response()->json(['data' => $studentGrades]);
        
     }
 
@@ -189,5 +213,91 @@ class EtudiantController extends Controller
             }
             
         }
+    }
+
+    // returns EDT for a given student 
+    public function getMySchedule($studentId)
+    {
+        // grab the student to get his filiere 
+        $student = Etudiant::find($studentId);
+        $filiereId = $student['id_filiere'];
+        //grab the filiere of the student 
+        $filiere = Filiere::find($filiereId);
+        // get name and level for filiere
+        $filiereName = $filiere['nom_filiere'];
+        $level = $filiere['niveau'];
+
+        // grab all UE's for that filiere
+        $educationalUnits = EducationalUnit::where('id_filiere',$filiereId)->get();
+    
+        // loop over the array of objects representing each UE and get "libelle_ue" and "id_ue"
+        $units =[];
+        foreach($educationalUnits as $unit)
+        {
+            $newUnit = (object) [
+                'id_ue' => $unit['id_ue'],
+                'nom_ue' => $unit['libelle_ue']
+            ];
+            array_push($units, $newUnit);
+        }
+      
+        // now for each unit we get all courses related to it 
+        $coursesForUnits = [];
+        foreach($units as $unit)
+        {
+            $id = $unit->id_ue;
+            $courses = Cours::where('id_ue',$id)->get();
+            $coursesForUnit = (object)[
+                'ue' => $unit->nom_ue,
+                'cours' => $courses
+            ];
+            array_push($coursesForUnits, $coursesForUnit);
+        }
+       
+
+        // now that we have the courses with the UE to which they belong 
+        // we can grab the EDT 
+        $coursesWithEdt = [];
+        foreach($coursesForUnits as $courseForUnit)
+        {
+            $nom_ue = $courseForUnit->ue;
+            $courses = $courseForUnit->cours;
+            foreach($courses as $course)
+            {
+                $nomCours = $course->nom_cours;
+                //grab the teacher's name for that course
+                $teacher = Utilisateur::find($course->id_enseignant);
+                $teacherName = $teacher['nom']." ".$teacher['prenom'];
+                $teacherEmail = $teacher['email'];
+                //grab the EDT for that course 
+                $edtForCourse = Edt::where('id_cours',$course->id_cours)->where('id_filiere',$filiereId)->get();
+                //return $edtForCourse;
+                foreach($edtForCourse as $edt)
+                {
+                    // create an object to store all data related to a course
+                    $type_course = $edt->type_cours;
+                    $start_course =  $edt->date_debut;
+                    $end_course = $edt->date_fin;
+                    $courseData = (object)[
+                        'unite_enseignement' => $nom_ue,
+                        'nom_cours' => $nomCours,
+                        'prof_cours' => $teacherName,
+                        'prof_contact' => $teacherEmail,
+                        'type' => $type_course,
+                        'debut' => $start_course,
+                        'fin'  => $end_course,
+                    ];
+                    array_push($coursesWithEdt, $courseData);
+
+                }
+
+            }
+
+        }
+        return response()->json(['data' => $coursesWithEdt]);
+
+
+
+
     }
 }

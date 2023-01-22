@@ -33,6 +33,8 @@ Route::resource('students', EtudiantController::class);
 Route::get('/students/{studentId}/notes',[EtudiantController::class,'getMyGrades']);
 //route that allows a student to check all his courses 
 Route::get('/students/{studentId}/mescours',[EtudiantController::class,'getMyCourses']);
+// route that allows a student to get his EDT 
+Route::get('/students/{studentId}/edt',[EtudiantController::class,'getMySchedule']);
 
 // handling enseignants 
 Route::resource('enseignants',EnseignantController::class);

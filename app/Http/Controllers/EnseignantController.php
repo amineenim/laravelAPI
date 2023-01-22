@@ -6,6 +6,7 @@ use App\Http\Resources\EnseignantsResource;
 use App\Models\Cours;
 use App\Models\EtudiantCours;
 use App\Models\Etudiant;
+use App\Models\Utilisateur;
 
 use Illuminate\Http\Request;
 
@@ -24,7 +25,24 @@ class EnseignantController extends Controller
 
     public function show(Enseignant $enseignant)
     {
-        return new EnseignantsResource($enseignant);
+        //grab the teacher with the given id 
+        $teacher = Enseignant::find($enseignant)[0];
+        $responsability = $teacher['responsabilite_ens'];
+        $horaire = $teacher['volume_horaire'];
+        // grab the user with the given id to get all data
+        $user = Utilisateur::find($enseignant)[0];
+
+        $fullName = $user['nom']." ".$user['prenom'];
+        $email = $user['email'];
+        $telephone = $user['tel'];
+        return (object)[
+            'nom_prenom' => $fullName,
+            'contact' => $email,
+            'phone' => $telephone,
+            'responsabilite' => $responsability,
+            'volumeHoraire' => $horaire
+        ];
+        
     }
 
     public function getMyCourses($enseignantId)

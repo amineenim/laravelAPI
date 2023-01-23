@@ -1,12 +1,13 @@
 <?php
 
+use App\Models\Cours;
+use App\Models\Etudiant;
+use App\Models\Enseignant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EtudiantController;
 use App\Http\Controllers\EnseignantController;
-use App\Models\Enseignant;
-use App\Models\Cours;
-use App\Models\Etudiant;
+use App\Http\Controllers\UtilisateurController;
 
 
 /*
@@ -43,3 +44,6 @@ Route::get('/enseignants/{enseignantId}/mescours',[EnseignantController::class,'
 // get all students for a given teacher course 
 Route::get('/enseignants/{enseignantId}/{coursId}/mystudents',[EnseignantController::class,"getMyStudents"]);
 
+
+//Route that allows to create a new user 
+Route::post('/admin/newUser',[UtilisateurController::class,'store']);

@@ -11,6 +11,12 @@ class Etudiant extends Model
 
     protected $table = 'etudiants';
     protected $primaryKey = 'id_utilisateur';
+    public $timestamps = false;
+    protected $fillable = [
+        'id_utilisateur',
+        'diplome_etudiant',
+        'id_filiere',
+    ];
 
     public function cours()
     {

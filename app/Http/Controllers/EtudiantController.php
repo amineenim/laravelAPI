@@ -33,7 +33,7 @@ class EtudiantController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(Request $request)
     {
         //
     }
@@ -46,7 +46,20 @@ class EtudiantController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // this function allows to create a new student resoource
+         $validatedRequest = $request->validate([
+            'id_utilisateur'   => 'required|integer|numeric|unique:etudiants,id_utilisateur',
+            'diplome_etudiant' => 'required|min:5|max:60|regex:/^[a-zA-Z0-9\s]*$/',
+            'id_filiere'       => 'required|integer|numeric'
+        ]);
+        //now that data is validated we creata a new student instance
+        $newStudent = Etudiant::create([
+            'id_utilisateur'   => $validatedRequest['id_utilisateur'],
+            'diplome_etudiant' => $validatedRequest['diplome_etudiant'],
+            'id_filiere'       => $validatedRequest['id_filiere'],
+        ]);
+
+        return response('Student created successefully ',201);
     }
 
     /**

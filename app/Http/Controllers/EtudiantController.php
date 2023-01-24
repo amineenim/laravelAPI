@@ -24,7 +24,31 @@ class EtudiantController extends Controller
     {
         //this function returns all students in Database 
         $students = Etudiant::all();
-        return ['students' => $students];
+        // loop over students and get data for each one 
+        $etudiants = [];
+        foreach($students as $student)
+        {
+            //query Utilisateurs table to get data about student 
+            $studentData = Utilisateur::find($student->id_utilisateur);
+            $fullName = $studentData->nom.' '.$studentData->prenom;
+            $email = $studentData->email;
+            $phone = $studentData->tel;
+            $diplome = $student->diplome_etudiant;
+            $filiere = Filiere::find($student->id_filiere);
+            $nom_filiere = $filiere->nom_filiere;
+            $niveau = $filiere->niveau;
+            // now that we have all needed data about student we put it in an object
+            $etudiant = (object)[
+                'full_Name' => $fullName,
+                'contact'   => $email,
+                'phone'     => $phone,
+                'diplome'   => $diplome,
+                'filiere'   => $nom_filiere,
+                'niveau'    => $niveau
+            ];
+            array_push($etudiants, $etudiant);
+        }
+        return ['students' => $etudiants];
         
     }
 
@@ -48,13 +72,20 @@ class EtudiantController extends Controller
     {
         // this function allows to create a new student resoource
          $validatedRequest = $request->validate([
-            'id_utilisateur'   => 'required|integer|numeric|unique:etudiants,id_utilisateur',
+            'nom' => 'bail|required|alpha|min:3|max:255',
+            'prenom' => 'bail|required|alpha|min:3|max:255',
+            'email'  => 'bail|required|email|unique:utilisateurs',
+            'password' => 'bail|required|alpha_dash|min:8|max:14',
+            'phone'  => 'bail|required|digits:10',
             'diplome_etudiant' => 'required|min:5|max:60|regex:/^[a-zA-Z0-9\s]*$/',
             'id_filiere'       => 'required|integer|numeric'
         ]);
+        //grab the user just created to get his Id 
+        $userJustCreated = Utilisateur::where('email',$validatedRequest['email'])->get()[0];
+        $studentId = $userJustCreated->id_utilisateur;
         //now that data is validated we creata a new student instance
         $newStudent = Etudiant::create([
-            'id_utilisateur'   => $validatedRequest['id_utilisateur'],
+            'id_utilisateur'   => $studentId,
             'diplome_etudiant' => $validatedRequest['diplome_etudiant'],
             'id_filiere'       => $validatedRequest['id_filiere'],
         ]);
@@ -71,7 +102,9 @@ class EtudiantController extends Controller
     public function show(Etudiant $student)
     {
         //this method returns a single student with his id 
+        
         $etudiant = Etudiant::find($student)[0];
+       
         // get all other data about student from utilisateurs table
         $user = Utilisateur::find($student)[0];
         $nom_etudiant = $user['nom']." ".$user["prenom"];
@@ -111,7 +144,7 @@ class EtudiantController extends Controller
      * @param  \App\Models\Student  $student
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Student $student)
+    public function update(Request $request, Etudiant $student)
     {
         //
     }
@@ -122,9 +155,12 @@ class EtudiantController extends Controller
      * @param  \App\Models\Student  $student
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Student $student)
+    public function destroy(Etudiant $student)
     {
-        //
+        //delete the student with corresponding id 
+        $studentToDelete = Etudiant::find($student)[0];
+        $studentToDelete->delete();
+        return response()->json('deleted successefully',202);
     }
 
     public function getMyGrades($studentId)

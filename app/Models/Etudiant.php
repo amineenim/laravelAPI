@@ -23,6 +23,26 @@ class Etudiant extends Model
         return $this->belongsToMany(Cours::class,'cour_etudiant','etudiant_id','cours_id');
     }
 
+    public function notes()
+    {
+        return $this->hasMany(Note::class,'id_utilisateur','id_utilisateur');
+    }
+
+    public function filiere()
+    {
+        return $this->hasOne(Filiere::class,'id_filiere','id_filiere') ;
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+        self::deleting(function($etudiant){
+            $etudiant->notes()->each(function($note){
+                $note->delete();
+            });
+        });
+    }
+
    
     
 }

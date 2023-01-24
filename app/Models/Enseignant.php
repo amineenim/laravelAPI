@@ -23,4 +23,23 @@ class Enseignant extends Model
         return $this->hasMany(Cours::class,'id_enseignant','id_utilisateur');
         // hasmany(model::class,foreign key in cours table, refernces key in enseignants table)
     }
+
+    public function filiere()
+    {
+        return $this->hasOne(Filiere::class,'id_responsable','id_utilisateur');
+    }
+
+
+    public static function boot()
+    {
+        parent::boot();
+        self::deleting(function($enseignant){
+            $enseignant->filiere()->delete();
+            $enseignant->cours()->each(function($cours){
+                $cours->delete();
+            });
+        });
+    }
+
+
 }

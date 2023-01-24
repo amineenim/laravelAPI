@@ -18,11 +18,47 @@ class EnseignantController extends Controller
     /* returns a listing of all enseignants */
     public function index()
     {
-        return response()->json(
-            [
-                "data" => Enseignant::all()
-            ]
-        );
+        $enseignants = Enseignant::all();
+        //loop over enseignants array and for each element 
+        // grab complementary data about it using id
+        $teachers = [];
+        foreach($enseignants as $enseignant)
+        {
+            $enseignantData = Utilisateur::find($enseignant->id_utilisateur);
+            $enseignant_cours = Cours::where('id_enseignant',$enseignant->id_utilisateur)->get();
+            //loop over courses and get name of course and ue
+            //because a teacher can have many courses
+            $cours_enseignant = [];
+            foreach($enseignant_cours as $cours)
+            {
+                $nom_cours = $cours->nom_cours;
+                $ue_cours = EducationalUnit::find($cours->id_ue);
+                $nom_ue = $ue_cours->libelle_ue;
+                $filiere = Filiere::find($ue_cours->id_filiere);
+                $nom_filiere = $filiere->nom_filiere;
+                $niveau_filiere = $filiere->niveau;
+                $cours = (object)[
+                    'cours' => $nom_cours,
+                    'unite_enseignement' => $nom_ue,
+                    'filiere' => $nom_filiere,
+                    'niveau'  => $niveau_filiere
+                ];
+                array_push($cours_enseignant, $cours);
+            }
+            //now that we have object $enseignantData storing data we can build a new object
+            $teacher = (object)[
+                'full_Name' => $enseignantData->nom.' '.$enseignantData->prenom,
+                'email'     => $enseignantData->email,
+                'responsabilty' => $enseignant->responsabilite_ens,
+                'phone'     => $enseignantData->tel,
+                'volume_horaire' => $enseignant->volume_horaire,
+                'cours'      => $cours_enseignant
+            ];
+            // add this object to an array of objects storing data about each teacher
+            array_push($teachers, $teacher);
+        }
+        // now we return the array of data
+        return response()->json(['enseignants' => $teachers]);
     }
 
     public function show(Enseignant $enseignant)
@@ -38,7 +74,7 @@ class EnseignantController extends Controller
         $email = $user['email'];
         $telephone = $user['tel'];
         return (object)[
-            'nom_prenom' => $fullName,
+            'full_name' => $fullName,
             'contact' => $email,
             'phone' => $telephone,
             'responsabilite' => $responsability,
@@ -56,17 +92,33 @@ class EnseignantController extends Controller
     public function store(Request $request)
     {
         $validatedRequest = $request->validate([
-            'id_utilisateur' => 'bail|required|unique:enseignants,id_utilisateur|numeric|integer',
+            'nom' => 'bail|required|alpha|min:3|max:255',
+            'prenom' => 'bail|required|alpha|min:3|max:255',
+            'email'  => 'bail|required|email|unique:utilisateurs',
+            'password' => 'bail|required|alpha_dash|min:8|max:14',
+            'phone'  => 'bail|required|digits:10',
             'responsabilite_ens' => 'bail|required|min:5|max:255|regex:/^[a-zA-Z\s]*$/',
             'volume_horaire' => 'bail|required|integer|numeric',
         ]);
+        // create new user using validated data 
+        $newUser = Utilisateur::create([
+            'role' => 'user',
+            'nom'  => $validatedRequest['nom'],
+            'prenom'  => $validatedRequest['prenom'],
+            'email'  => $validatedRequest['email'],
+            'password' => $validatedRequest['password'],
+            'tel'    => $validatedRequest['phone']
+        ]);
+        // grab the id of the new user just created to create enseignant
+        $userJustCreated = Utilisateur::where('email',$validatedRequest['email'])->get()[0];
+        $userId = $userJustCreated->id_utilisateur;
         //after having valid data we can create a new Enseignant
         $newTeacher = Enseignant::create([
-            'id_utilisateur' => $validatedRequest['id_utilisateur'],
-            'reponsabilite_ens' => $validatedRequest['responsabilite_ens'],
+            'id_utilisateur'   => $userId,
+            'responsabilite_ens' => $validatedRequest['responsabilite_ens'],
             'volume_horaire'   => $validatedRequest['volume_horaire'],
         ]);
-        return response('Eseignant crée avec succès',201);
+        return response('Enseignant crée avec succès',201);
     }
 
     public function update(Enseignant $enseignant,Request $request)
@@ -118,7 +170,12 @@ class EnseignantController extends Controller
             return response('missing data');
         }
         
-
+    }
+    public function destroy(Enseignant $enseignant)
+    {
+        $enseignantToDelete = Enseignant::find($enseignant)[0];
+        $enseignantToDelete->delete();
+        return response()->json('deleted with succes',202);
     }
 
     public function getMyCourses($enseignantId)
@@ -131,13 +188,18 @@ class EnseignantController extends Controller
             $cours_name = $cours->nom_cours;
             $education_unit = EducationalUnit::find($cours->id_ue);
             $nom_unit_education = $education_unit->libelle_ue;
+            $filiere = Filiere::find($education_unit->id_filiere);
+            $nom_filiere = $filiere->nom_filiere;
+            $niveau = $filiere->niveau;
             $moncours = (object)[
                 'nom_cours' => $cours_name,
-                'unite-enseignement' => $nom_unit_education
+                'unite-enseignement' => $nom_unit_education,
+                'filiere'  => $nom_filiere,
+                'niveau'   => $niveau
             ];
             array_push($mesCours, $moncours);
         }
-        return ["data" => $mesCours];
+        return ["mesCours" => $mesCours];
     }
 
     public function getMyStudents($enseignantId, $coursId)

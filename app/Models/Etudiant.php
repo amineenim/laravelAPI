@@ -33,12 +33,21 @@ class Etudiant extends Model
         return $this->hasOne(Filiere::class,'id_filiere','id_filiere') ;
     }
 
+    public function etudiantscours()
+    {
+        return $this->hasMany(EtudiantCours::class,'etudiant_id','id_utilisateur');
+    }
+
     public static function boot()
     {
         parent::boot();
         self::deleting(function($etudiant){
             $etudiant->notes()->each(function($note){
                 $note->delete();
+            });
+            $etudiant->etudiantscours()->orderBy('cours_id')->
+            each(function($etudiant_cours){
+                $etudiant_cours->delete();
             });
         });
     }

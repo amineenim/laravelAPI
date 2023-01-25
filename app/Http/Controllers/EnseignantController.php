@@ -9,6 +9,7 @@ use App\Models\Etudiant;
 use App\Models\Utilisateur;
 use App\Models\Filiere;
 use App\Models\EducationalUnit;
+use App\Models\Note;
 
 use Illuminate\Http\Request;
 
@@ -61,14 +62,21 @@ class EnseignantController extends Controller
         return response()->json(['enseignants' => $teachers]);
     }
 
-    public function show(Enseignant $enseignant)
+    public function show($enseignantId)
     {
         //grab the teacher with the given id 
-        $teacher = Enseignant::find($enseignant)[0];
+        $teacher = Enseignant::find($enseignantId);
+        if(!$teacher)
+        {
+            return response()->json(
+                ['message' => 'no teacher found']
+            );
+        }
+        
         $responsability = $teacher['responsabilite_ens'];
         $horaire = $teacher['volume_horaire'];
         // grab the user with the given id to get all data
-        $user = Utilisateur::find($enseignant)[0];
+        $user = Utilisateur::find($enseignantId);
 
         $fullName = $user['nom']." ".$user['prenom'];
         $email = $user['email'];
@@ -181,7 +189,19 @@ class EnseignantController extends Controller
     public function getMyCourses($enseignantId)
     {
         $enseignant = Enseignant::find($enseignantId);
+        if(!$enseignant)
+        {
+            return response()->json(
+                ['message' => 'no such teacher foound']
+            );
+        }
         $cours_enseignant = ($enseignant->cours);
+        if(count($cours_enseignant) ==0)
+        {
+            return response()->json(
+                ['message' => "you don't have no courses"]
+            );
+        }
         $mesCours = [];
         foreach($cours_enseignant as $cours)
         {
@@ -223,34 +243,175 @@ class EnseignantController extends Controller
             {
                 array_push($studentsIdentifiers, $etudiantCours["etudiant_id"]);
             }
+        
             //now that we have students id's we loop over the array and grab each student
             $myStudents = [];
             foreach($studentsIdentifiers as $studentId)
             {
                 $myStudent = Etudiant::find($studentId);
-                array_push($myStudents, $myStudent);
+                if($myStudent !== null)
+                {
+                    array_push($myStudents, $myStudent);
+                }
             }
+            
             //grab student's name and other data 
-            $studentsData = [];
-            foreach($myStudents as $student)
-            {
-                $studentData = Utilisateur::find($student->id_utilisateur);
-                $studentFiliere = Filiere::find($student->id_filiere);
-                $nom_prenom_eleve = $studentData->nom." ".$studentData->prenom;
-                $email_eleve = $studentData->email;
-                $filiere = $studentFiliere->nom_filiere;
-                $niveau = $studentFiliere->niveau;
-                $newStudent = (object)[
-                    'full name' => $nom_prenom_eleve,
-                    'email'     => $email_eleve,
-                    'filiere'   => $filiere,
-                    'niveau'    => $niveau
-                ];
-                array_push($studentsData, $newStudent);
+            if(!empty($myStudents)){
+                $studentsData = [];
+                foreach($myStudents as $student)
+                {
+                    $studentData = Utilisateur::find($student->id_utilisateur);
+                    $studentFiliere = Filiere::find($student->id_filiere);
+                    $nom_prenom_eleve = $studentData->nom." ".$studentData->prenom;
+                    $email_eleve = $studentData->email;
+                    $filiere = $studentFiliere->nom_filiere;
+                    $niveau = $studentFiliere->niveau;
+                    $newStudent = (object)[
+                        'full name' => $nom_prenom_eleve,
+                        'email'     => $email_eleve,
+                        'filiere'   => $filiere,
+                        'niveau'    => $niveau
+                    ];
+                    array_push($studentsData, $newStudent);
+                }
+                return [$nom_cours => $studentsData];
+            }else {
+                return response()->json("you have no students for the course ".$nom_cours,200);
             }
-            return [$nom_cours => $studentsData];
             
         }
     
+    }
+
+    //this function returns simply a form aalowing teacher to add a student to a given course
+    public function addStudent($enseignantId,$coursId)
+    {
+        return 'here you may add a student to your course with id '.$coursId.' and you are teacher with id '.$enseignantId ;
+    }
+
+    //this function handles the submission of the form and creating the link between the student and course
+    public function addStudentToCourse(Request $request,$enseignantId,$coursId)
+    {
+        //verify if the course belongs to the given teacher 
+        $course = Cours::find($coursId);
+        if(!$course)
+        {
+            return response()->json(
+                ["message" => "no such course found !"]
+            );
+        }
+        $course_name = $course->nom_cours ;
+        if($course->id_enseignant != $enseignantId)
+        {
+            return response()->json(
+                ["message" => "sorry you're not allowed to modify this course, it's not yours"]
+            );
+        }
+        //now that the teacher is the owner of the given course 
+        // we proceed to validate data 
+        $validatedRequest = $request->validate([
+            'nom_eleve' => 'required|exists:App\Models\Utilisateur,nom',
+            'prenom_eleve' => 'required|exists:App\Models\Utilisateur,prenom',
+            'email'     => 'required|exists:App\Models\Utilisateur,email'
+        ]);
+        //after having a valid data we can request etudiants table to grab etudiant id 
+        $user = Utilisateur::where('nom',$validatedRequest['nom_eleve'])
+        ->where('prenom',$validatedRequest['prenom_eleve'])
+        ->where('email',$validatedRequest['email'])->first();
+        $user_id = $user->id_utilisateur;
+        //verify that the found id belongs actually to a student 
+        $etudiant = Etudiant::find($user_id);
+        if(!$etudiant)
+        {
+            return response()->json([
+                'message' => 'the selected user is not a student'
+            ]);
+        }
+        // now that all is set we can create a new record in the table
+        // cour_etudiant which links a student to a given course
+        $newRecord = EtudiantCours::create([
+            'cours_id' => $coursId,
+            'etudiant_id' => $etudiant->id_utilisateur
+        ]);
+
+        return response()->json([
+            'message' => 'student added to course '. $course_name.' with succes'
+        ]);
+        
+    }
+
+    //this function handles dusplaying a form so the teacher can give grade to student
+    public function assignGrade($enseignantId,$coursId,$studentId)
+    {
+        $cours = Cours::find($coursId);
+        if(!$cours)
+        {
+            return response()->json([
+                'message' => 'no such course found !'
+            ]);
+        }
+        $nom_cours = $cours->nom_cours;
+        //verify if the course belongs to the given teacher 
+        if($cours->id_enseignant != $enseignantId)
+        {
+            return response()->json(
+                ['message' => 'sorry, you don t have authorization ta handle the course '.$nom_cours]
+            );
+        }
+        //verify if the student is having the given course or not 
+        $student = Etudiant::find($studentId);
+        if(!$student)
+        {
+            return response()->json(
+                ["message" => "no such student found!"]
+            );
+        }
+        $user = Utilisateur::find($studentId);
+        $studenFullName = $user->nom." ".$user->prenom;
+        $studentemail = $user->email;
+
+        $student_course = EtudiantCours::where('cours_id',$coursId)
+        ->where('etudiant_id',$studentId)->first();
+        if(!$student_course)
+        {
+            return response()->json([
+                "message" => "unauthorized operation, student not having course"
+            ]);
+        }
+        $id_filiere = $student->id_filiere;
+        $filiere = Filiere::find($id_filiere);
+        $nom_filiere = $filiere->nom_filiere;
+        $niveau = $filiere->niveau;
+        
+        $dataToDisplay = (object)[
+            'courseName' => $nom_cours,
+            'student' => [
+                'fullName' => $studenFullName,
+                'filiere'  => $nom_filiere,
+                'niveau'   => $niveau
+            ]
+        ];
+        return response()->json([
+            "message" => 'here we will display a form with a single input that receives the grade for a student for a given course',
+            "data" => $dataToDisplay
+        ]);
+    }
+
+    //this function handles storing the grade of the student for a given course
+    public function storeGrade(Request $request,$enseignantId,$coursId,$studentId)
+    {
+        //here we only should validate the grade and maybe redirect 
+        $validatedRequest = $request->validate([
+            'note' => 'required|numeric|between:0,20.00'
+        ]);
+        // now we create a new grade record in notes table
+        $newGrade = Note::create([
+            'id_utilisateur' => $studentId,
+            'id_cours'       => $coursId,
+            'note'           => $validatedRequest['note']
+        ]);
+        return response()->json([
+            "message" => "grade added with succes !"
+        ]);
     }
 }

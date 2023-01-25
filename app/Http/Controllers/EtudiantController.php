@@ -80,6 +80,15 @@ class EtudiantController extends Controller
             'diplome_etudiant' => 'required|min:5|max:60|regex:/^[a-zA-Z0-9\s]*$/',
             'id_filiere'       => 'required|integer|numeric'
         ]);
+        // create new user using validated data 
+        $newUser = Utilisateur::create([
+            'role' => 'user',
+            'nom'  => $validatedRequest['nom'],
+            'prenom'  => $validatedRequest['prenom'],
+            'email'  => $validatedRequest['email'],
+            'password' => $validatedRequest['password'],
+            'tel'    => $validatedRequest['phone']
+        ]);
         //grab the user just created to get his Id 
         $userJustCreated = Utilisateur::where('email',$validatedRequest['email'])->get()[0];
         $studentId = $userJustCreated->id_utilisateur;
@@ -90,7 +99,9 @@ class EtudiantController extends Controller
             'id_filiere'       => $validatedRequest['id_filiere'],
         ]);
 
-        return response('Student created successefully ',201);
+        return response()->json(
+            ['message' => "student created with succes !"]
+        );
     }
 
     /**
@@ -99,14 +110,20 @@ class EtudiantController extends Controller
      * @param  \App\Models\Student  $student
      * @return \Illuminate\Http\Response
      */
-    public function show(Etudiant $student)
+    public function show($studentId)
     {
         //this method returns a single student with his id 
         
-        $etudiant = Etudiant::find($student)[0];
+        $etudiant = Etudiant::find($studentId);
+        if(!$etudiant)
+        {
+            return response()->json(
+                ['message' => 'no such student found !']
+            );
+        }
        
         // get all other data about student from utilisateurs table
-        $user = Utilisateur::find($student)[0];
+        $user = Utilisateur::find($studentId);
         $nom_etudiant = $user['nom']." ".$user["prenom"];
         $email = $user["email"];
         $telephone = $user["tel"];
@@ -132,7 +149,7 @@ class EtudiantController extends Controller
      * @param  \App\Models\Student  $student
      * @return \Illuminate\Http\Response
      */
-    public function edit(Student $student)
+    public function edit(Etudiant $student)
     {
         //
     }
@@ -155,10 +172,16 @@ class EtudiantController extends Controller
      * @param  \App\Models\Student  $student
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Etudiant $student)
+    public function destroy($studentId)
     {
         //delete the student with corresponding id 
-        $studentToDelete = Etudiant::find($student)[0];
+        $studentToDelete = Etudiant::find($studentId);
+        if(!$studentToDelete)
+        {
+            return response()->json(
+                ['message' => 'resource student not found !']
+            );
+        }
         $studentToDelete->delete();
         return response()->json('deleted successefully',202);
     }
@@ -168,7 +191,19 @@ class EtudiantController extends Controller
         //grab the student with the given id 
         $student = Etudiant::find($studentId);
         //grab all courses related to the student
+        if(!$student)
+        {
+            return response()->json(
+                ["message" => "no student found !"]
+            );
+        }
         $cours = $student->cours;
+        if(count($cours) == 0)
+        {
+            return response()->json(
+                ["message" => "no courses yet for the student"]
+            );
+        }
 
         //initialise an empty object that holds the course name and corresponding grade
         $cours_note = (object) [
@@ -212,7 +247,7 @@ class EtudiantController extends Controller
         $student = Etudiant::find($studentId);
         if(!$student)
         {
-            return "no such student found !";
+            return response()->json(['message' => 'no student found with given id']);
         }
         else 
         {
@@ -221,7 +256,7 @@ class EtudiantController extends Controller
           
             if(count($etudiant_cours) == 0)
             {
-                return "you don't have no courses !";
+                return response()->json(['message' => "you don't have no courses !"]);
                 
             }
             else 
@@ -269,6 +304,12 @@ class EtudiantController extends Controller
     {
         // grab the student to get his filiere 
         $student = Etudiant::find($studentId);
+        if(!$student)
+        {
+            return response()->json(
+                ['message' => 'no such student found']
+            );
+        }
         $filiereId = $student['id_filiere'];
         //grab the filiere of the student 
         $filiere = Filiere::find($filiereId);
@@ -288,6 +329,12 @@ class EtudiantController extends Controller
                 'nom_ue' => $unit['libelle_ue']
             ];
             array_push($units, $newUnit);
+        }
+        if(count($units) == 0)
+        {
+            return response()->json([
+                'message' => 'no educational units are found in your branch now'
+            ]);
         }
       
         // now for each unit we get all courses related to it 

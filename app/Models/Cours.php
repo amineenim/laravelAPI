@@ -10,6 +10,13 @@ class Cours extends Model
 
     protected $table = 'cours';
     protected $primaryKey = 'id_cours';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'nom_cours',
+        'id_enseignant',
+        'id_ue'
+    ];
 
     public function enseignant()
     {

@@ -20,5 +20,22 @@ class Utilisateur extends Model
         'password',
         'tel',
     ];
+    public function etudiant()
+    {
+        return $this->hasOne(Etudiant::class,'id_utilisateur','id_utilisateur');
+    }
+    public function enseignant()
+    {
+        return $this->hasOne(Enseignant::class,'id_utilisateur','id_utilisateur');
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+        self::deleting(function($utilisateur){
+            $utilisateur->etudiant()->delete();
+            $utilisateur->enseignant()->delete();
+        });
+    }
 
 }

@@ -38,10 +38,16 @@ class Etudiant extends Model
         return $this->hasMany(EtudiantCours::class,'etudiant_id','id_utilisateur');
     }
 
+    public function utilisateur()
+    {
+        return $this->belongsTo(Utilisateur::class,'id_utilisateur','id_utilisateur');
+    }
+
     public static function boot()
     {
         parent::boot();
         self::deleting(function($etudiant){
+            $etudiant->utilisateur()->delete();
             $etudiant->notes()->each(function($note){
                 $note->delete();
             });
@@ -49,6 +55,7 @@ class Etudiant extends Model
             each(function($etudiant_cours){
                 $etudiant_cours->delete();
             });
+
         });
     }
 

@@ -9,6 +9,14 @@ class Filiere extends Model
 {
     use HasFactory;
     protected $primaryKey = "id_filiere";
+    protected $fillable = [
+        'nom_filiere',
+        'description',
+        'niveau',
+        'nombre_annee',
+        'id_responsable'
+    ];
+    public $timestamps =false;
 
 
     public function enseignant()
@@ -20,6 +28,7 @@ class Filiere extends Model
     {
         return $this->hasMany(Etudiant::class,'id_filiere','id_filiere');
     }
+
 
 
     public static function boot()

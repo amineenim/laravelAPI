@@ -78,10 +78,19 @@ class EtudiantController extends Controller
             'password' => 'bail|required|alpha_dash|min:8|max:14',
             'phone'  => 'bail|required|digits:10',
             'diplome_etudiant' => 'required|min:5|max:60|regex:/^[a-zA-Z0-9\s]*$/',
-            'id_filiere'       => 'required|integer|numeric'
+            'filiere'       => 'required|exists:filieres,nom_filiere',
+            'niveau'        => 'required|exists:filieres,niveau'
         ]);
-        // create new user using validated data 
-        $newUser = Utilisateur::create([
+        // grab the id of the filiere based on it's name 
+        $corresponding_filiere = Filiere::where('nom_filiere',$validatedRequest['filiere'])
+        ->where('niveau',$validatedRequest['niveau'])->first();
+        if(!$corresponding_filiere)
+        {
+            return response()->json(['message' => 'please verify your filiere data']);
+        }
+        $id_filiere = $corresponding_filiere->id_filiere;
+         // create new user using validated data 
+         $newUser = Utilisateur::create([
             'role' => 'user',
             'nom'  => $validatedRequest['nom'],
             'prenom'  => $validatedRequest['prenom'],
@@ -89,14 +98,14 @@ class EtudiantController extends Controller
             'password' => $validatedRequest['password'],
             'tel'    => $validatedRequest['phone']
         ]);
-        //grab the user just created to get his Id 
+         //grab the user just created to get his Id 
         $userJustCreated = Utilisateur::where('email',$validatedRequest['email'])->get()[0];
         $studentId = $userJustCreated->id_utilisateur;
         //now that data is validated we creata a new student instance
         $newStudent = Etudiant::create([
             'id_utilisateur'   => $studentId,
             'diplome_etudiant' => $validatedRequest['diplome_etudiant'],
-            'id_filiere'       => $validatedRequest['id_filiere'],
+            'id_filiere'       => $id_filiere,
         ]);
 
         return response()->json(
@@ -182,7 +191,9 @@ class EtudiantController extends Controller
                 ['message' => 'resource student not found !']
             );
         }
-        $studentToDelete->delete();
+        // delete the user corresponding to that student
+        $userToDelete = Utilisateur::find($studentId);
+        $userToDelete->delete();
         return response()->json('deleted successefully',202);
     }
 

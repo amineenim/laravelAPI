@@ -129,60 +129,48 @@ class EnseignantController extends Controller
         return response('Enseignant crée avec succès',201);
     }
 
-    public function update(Enseignant $enseignant,Request $request)
+    public function update($enseignantId,Request $request)
     {
+        //normally an admin can change other data about the teacher 
+        // i'll add it one i implement policies and gates
         //this function handles both put which changes all the ressource 
         // and patch which changes a part of the ressource 
-        $teacher = Enseignant::find($enseignant)[0];
-        if (isset($request->responsabilite_ens) && isset($request->volume_horaire))
+        $teacher = Enseignant::find($enseignantId);
+        if(!$teacher)
         {
-            // validate the data 
-            $validatedRequest = $request->validate([
-                'responsabilite_ens' => 'bail|required|min:5|max:255|regex:/^[a-zA-Z\s]*$/',
-                'volume_horaire'     => 'bail|required|integer|numeric'
+            return response()->json([
+                'message' => 'no such teacher found !'
             ]);
-            $teacher->update([
-                'responsabilite_ens' => $validatedRequest['responsabilite_ens'],
-                'volume_horaire'     => $validatedRequest['volume_horaire']
-            ]);
+        }
+        $corresponding_user = Utilisateur::find($teacher->id_utilisateur);
+       // teacher can only modify it's email and phone number 
+       $validatedRequest = $request->validate([
+        'email' => 'required|email|unique:utilisateurs',
+        'phone' => 'required|digits:10'
+       ]);
+       // now that we have valid data, we can update in storage 
+       $corresponding_user->update([
+        'email' => $validatedRequest['email'],
+        'tel'   => $validatedRequest['phone']
+       ]);
+       return response()->json([
+        'message' => 'enseignant updated with succes'
+       ],200);
+       
 
-            return response('updated successefully',200);
-        }
-        elseif (isset($request->responsabilite_ens))
-        {
-            // validate the data 
-            $validatedRequest = $request->validate([
-                'responsabilite_ens' => 'bail|required|min:5|max:255|regex:/^[a-zA-Z\s]*$/'
-            ]);
-            $teacher->update([
-                'responsabilite_ens' => $validatedRequest['responsabilite_ens']
-            ]);
-            
-            return response('updated with succes',200);
-        }
-        elseif(isset($request->volume_horaire))
-        {
-             // validate the data 
-            $validatedRequest = $request->validate([
-                'volume_horaire' => 'bail|required|integer|numeric'
-            ]);
-            $teacher->update([
-                'volume_horaire' => $validatedRequest['volume_horaire']
-            ]);
-                        
-            return response('updated with succes',200);
-
-        }
-        else 
-        {
-            return response('missing data');
-        }
         
     }
     public function destroy(Enseignant $enseignant)
     {
         $enseignantToDelete = Enseignant::find($enseignant)[0];
-        $enseignantToDelete->delete();
+        if(!$enseignantToDelete)
+        {
+            return response()->json([
+                'message' => 'no such resource found !'
+            ]);
+        }
+        $userToDelete = Utilisateur::find($enseignantToDelete->id_utilisateur);
+        $userToDelete->delete();
         return response()->json('deleted with succes',202);
     }
 
@@ -327,6 +315,15 @@ class EnseignantController extends Controller
                 'message' => 'the selected user is not a student'
             ]);
         }
+        // verify if the student isn't already linked to the course 
+        $record = EtudiantCours::where('cours_id',$coursId)
+        ->where('etudiant_id',$user_id)->first();
+        if($record)
+        {
+            return response()->json([
+                'message' => 'the student already exists in the given course !'
+            ]);
+        }
         // now that all is set we can create a new record in the table
         // cour_etudiant which links a student to a given course
         $newRecord = EtudiantCours::create([
@@ -340,7 +337,7 @@ class EnseignantController extends Controller
         
     }
 
-    //this function handles dusplaying a form so the teacher can give grade to student
+    //this function handles displaying a form so the teacher can give grade to student
     public function assignGrade($enseignantId,$coursId,$studentId)
     {
         $cours = Cours::find($coursId);
@@ -400,6 +397,15 @@ class EnseignantController extends Controller
     //this function handles storing the grade of the student for a given course
     public function storeGrade(Request $request,$enseignantId,$coursId,$studentId)
     {
+        //verify if the grade already exists in table notes 
+        $grade = Note::where('id_utilisateur',$studentId)
+        ->where('id_cours',$coursId)->first();
+        if($grade)
+        {
+            return response()->json([
+                'message' => "étudiant déja noté !"
+            ]);
+        }
         //here we only should validate the grade and maybe redirect 
         $validatedRequest = $request->validate([
             'note' => 'required|numeric|between:0,20.00'

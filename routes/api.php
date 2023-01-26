@@ -9,6 +9,7 @@ use App\Http\Controllers\EtudiantController;
 use App\Http\Controllers\EnseignantController;
 use App\Http\Controllers\UtilisateurController;
 use App\Http\Controllers\CoursController;
+use App\Http\Controllers\FiliereController;
 
 
 /*
@@ -58,5 +59,15 @@ Route::get('/enseignants/{enseignantId}/{coursId}/{studentId}/addgrade',[Enseign
 Route::post('/enseignants/{enseignantId}/{coursId}/{studentId}/addgrade',[EnseignantController::class,"storeGrade"]);
 
 
-//Route that allows to create a new user 
-Route::post('/admin/newUser',[UtilisateurController::class,'store']);
+//route that dispalys a form so  new user can be created
+// the user is either a teacher or student  
+Route::get('/admin/newUser',[UtilisateurController::class,'create']);
+// this route will redirect after submission to one 
+// of the routes for creating a teacher or student with post method
+
+// allows an admin to consult all filieres 
+Route::get('/admin/filieres',[FiliereController::class,'index']);
+// allows an admin to delete a filiere 
+Route::delete('/admin/filieres/{filiereId}',[FiliereController::class,'destroy']);
+// allows an admin to create a new filiere 
+Route::post('/admin/newfiliere',[FiliereController::class,'store']);

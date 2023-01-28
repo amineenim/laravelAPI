@@ -75,7 +75,6 @@ class CoursController extends Controller
             return response()->json([
                 'message' => 'Oops! something went wrong'
             ]);
-
         }
         return response()->json([
             'message' => 'course created with succes !'

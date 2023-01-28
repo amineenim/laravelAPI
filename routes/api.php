@@ -10,6 +10,7 @@ use App\Http\Controllers\EnseignantController;
 use App\Http\Controllers\UtilisateurController;
 use App\Http\Controllers\CoursController;
 use App\Http\Controllers\FiliereController;
+use App\Http\Controllers\UeController;
 
 
 /*
@@ -71,3 +72,6 @@ Route::get('/admin/filieres',[FiliereController::class,'index']);
 Route::delete('/admin/filieres/{filiereId}',[FiliereController::class,'destroy']);
 // allows an admin to create a new filiere 
 Route::post('/admin/newfiliere',[FiliereController::class,'store']);
+
+// route that allows creationg a new UE resource 
+Route::post('/newue',[UeController::class,'store']);

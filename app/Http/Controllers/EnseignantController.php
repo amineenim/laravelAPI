@@ -100,6 +100,7 @@ class EnseignantController extends Controller
     public function store(Request $request)
     {
         $validatedRequest = $request->validate([
+            'role' => 'required|in:user,admin,User,Admin',
             'nom' => 'bail|required|alpha|min:3|max:255',
             'prenom' => 'bail|required|alpha|min:3|max:255',
             'email'  => 'bail|required|email|unique:utilisateurs',
@@ -110,7 +111,7 @@ class EnseignantController extends Controller
         ]);
         // create new user using validated data 
         $newUser = Utilisateur::create([
-            'role' => 'user',
+            'role' => $validatedRequest['role'],
             'nom'  => $validatedRequest['nom'],
             'prenom'  => $validatedRequest['prenom'],
             'email'  => $validatedRequest['email'],
@@ -145,9 +146,20 @@ class EnseignantController extends Controller
         $corresponding_user = Utilisateur::find($teacher->id_utilisateur);
        // teacher can only modify it's email and phone number 
        $validatedRequest = $request->validate([
-        'email' => 'required|email|unique:utilisateurs',
+        'email' => 'required|email',
         'phone' => 'required|digits:10'
        ]);
+       //verify if the new email has not already been taken
+       $user = Utilisateur::where('email',$validatedRequest['email'])->first();
+       if($user)
+       {
+            if($user->id_utilisateur != $enseignantId)
+            {
+                return response()->json([
+                    'message' => 'this email adress has been taken already !'
+                ]);
+            }
+       }
        // now that we have valid data, we can update in storage 
        $corresponding_user->update([
         'email' => $validatedRequest['email'],
@@ -160,17 +172,30 @@ class EnseignantController extends Controller
 
         
     }
-    public function destroy(Enseignant $enseignant)
+    public function destroy($enseignantId)
     {
-        $enseignantToDelete = Enseignant::find($enseignant)[0];
+        $enseignantToDelete = Enseignant::find($enseignantId);
         if(!$enseignantToDelete)
         {
             return response()->json([
                 'message' => 'no such resource found !'
             ]);
         }
-        $userToDelete = Utilisateur::find($enseignantToDelete->id_utilisateur);
-        $userToDelete->delete();
+        if(!$enseignantToDelete)
+        {
+            return response()->json([
+                'message' => 'no such resource found !'
+            ]);
+        }
+        //look if there is a filiere who has the user as responsable 
+        $filiereToDelete = Filiere::where('id_responsable',$enseignantId)->first();
+        if($filiereToDelete)
+        {
+            $filiereToDelete->delete();
+        }
+        //$userToDelete = Utilisateur::find($enseignantToDelete->id_utilisateur);
+        //$userToDelete->delete();
+        $enseignantToDelete->delete();
         return response()->json('deleted with succes',202);
     }
 
@@ -201,7 +226,7 @@ class EnseignantController extends Controller
             $niveau = $filiere->niveau;
             $moncours = (object)[
                 'nom_cours' => $cours_name,
-                'unite-enseignement' => $nom_unit_education,
+                'unite_enseignement' => $nom_unit_education,
                 'filiere'  => $nom_filiere,
                 'niveau'   => $niveau
             ];
@@ -214,6 +239,21 @@ class EnseignantController extends Controller
     {
         //first get the teacher with the corresponding id 
         $teacher = Enseignant::find($enseignantId);
+        //verify if the course actually corresponds to the teacher 
+        $course = Cours::find($coursId);
+        if(!$course)
+        {
+            return response()->json([
+                'message' => 'no resource found !'
+            ]);
+        }
+        // now that the course exists, verify if it belongs to teacher 
+        if($course->id_enseignant != $enseignantId)
+        {
+            return response()->json([
+                'message' => 'unauthorized !'
+            ]);
+        }
         //get the course for the corresponding coursId 
         $teacher_course = Cours::where('id_enseignant','=',$enseignantId)->where('id_cours',$coursId)->get();
         $nom_cours = $teacher_course[0]->nom_cours;
@@ -312,7 +352,7 @@ class EnseignantController extends Controller
         if(!$etudiant)
         {
             return response()->json([
-                'message' => 'the selected user is not a student'
+                'message' => 'no student corresponds to your data, please verify'
             ]);
         }
         // verify if the student isn't already linked to the course 
@@ -404,6 +444,29 @@ class EnseignantController extends Controller
         {
             return response()->json([
                 'message' => "étudiant déja noté !"
+            ]);
+        }
+        //verify if the course belongs to teacher 
+        $course = Cours::find($coursId);
+        if(!$course)
+        {
+            return response()->json([
+                'message' => 'no ressource found !'
+            ]);
+        }
+        if($course->id_enseignant != $enseignantId)
+        {
+            return response()->json([
+                'message' => 'unauthorized operation !'
+            ]);
+
+        }
+        //verify if the student actually is having the course 
+        $etudiant_cours = EtudiantCours::where('cours_id',$coursId)->where('etudiant_id',$studentId)->first();
+        if(!$etudiant_cours)
+        {
+            return response()->json([
+                'message' => 'the given student is not having the course'
             ]);
         }
         //here we only should validate the grade and maybe redirect 

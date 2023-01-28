@@ -19,10 +19,10 @@ class Filiere extends Model
     public $timestamps =false;
 
 
-    public function enseignant()
+    /*public function enseignant()
     {
         return $this->belongsTo(Enseignant::class,'id_responsable','id_utilisateur');
-    }
+    }*/
 
     public function etudiants()
     {

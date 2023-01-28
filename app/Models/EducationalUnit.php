@@ -11,4 +11,11 @@ class EducationalUnit extends Model
 
     protected $table = 'ue';
     protected $primaryKey = 'id_ue';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'id_filiere',
+        'libelle_ue',
+        'description'
+    ];
 }

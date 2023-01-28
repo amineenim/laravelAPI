@@ -72,6 +72,7 @@ class EtudiantController extends Controller
     {
         // this function allows to create a new student resoource
          $validatedRequest = $request->validate([
+            'role' => 'required|in:user,admin,User,Admin',
             'nom' => 'bail|required|alpha|min:3|max:255',
             'prenom' => 'bail|required|alpha|min:3|max:255',
             'email'  => 'bail|required|email|unique:utilisateurs',
@@ -79,7 +80,7 @@ class EtudiantController extends Controller
             'phone'  => 'bail|required|digits:10',
             'diplome_etudiant' => 'required|min:5|max:60|regex:/^[a-zA-Z0-9\s]*$/',
             'filiere'       => 'required|exists:filieres,nom_filiere',
-            'niveau'        => 'required|exists:filieres,niveau'
+            'niveau'        => 'required|in:L,M,D'
         ]);
         // grab the id of the filiere based on it's name 
         $corresponding_filiere = Filiere::where('nom_filiere',$validatedRequest['filiere'])
@@ -91,7 +92,7 @@ class EtudiantController extends Controller
         $id_filiere = $corresponding_filiere->id_filiere;
          // create new user using validated data 
          $newUser = Utilisateur::create([
-            'role' => 'user',
+            'role' => $validatedRequest['role'],
             'nom'  => $validatedRequest['nom'],
             'prenom'  => $validatedRequest['prenom'],
             'email'  => $validatedRequest['email'],
@@ -192,8 +193,9 @@ class EtudiantController extends Controller
             );
         }
         // delete the user corresponding to that student
-        $userToDelete = Utilisateur::find($studentId);
-        $userToDelete->delete();
+        //$userToDelete = Utilisateur::find($studentId);
+        //$userToDelete->delete();
+        $studentToDelete->delete();
         return response()->json('deleted successefully',202);
     }
 
@@ -212,7 +214,7 @@ class EtudiantController extends Controller
         if(count($cours) == 0)
         {
             return response()->json(
-                ["message" => "no courses yet for the student"]
+                ["message" => "no grades found, still not having no courses yet"]
             );
         }
 

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Enseignant extends Model
 {
@@ -18,12 +19,13 @@ class Enseignant extends Model
 
     public $timestamps = false;
 
+
     public function cours()
     {
-        return $this->hasMany(Cours::class,'id_enseignant','id_utilisateur');
-        // hasmany(model::class,foreign key in cours table, refernces key in enseignants table)
-    }
+        return $this->hasMany(Cours::class,'id_enseignant','id_utilisateur') ;
 
+    }
+   
     public function filiere()
     {
         return $this->hasOne(Filiere::class,'id_responsable','id_utilisateur');
@@ -34,12 +36,11 @@ class Enseignant extends Model
     {
         parent::boot();
         self::deleting(function($enseignant){
-            $enseignant->filiere()->delete();
+            //$enseignant->filiere()->delete();
             $enseignant->cours()->each(function($cours){
                 $cours->delete();
             });
         });
     }
-
 
 }

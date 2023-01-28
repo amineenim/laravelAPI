@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Etudiant extends Model
 {
@@ -37,23 +38,18 @@ class Etudiant extends Model
     {
         return $this->hasMany(EtudiantCours::class,'etudiant_id','id_utilisateur');
     }
-
     public function utilisateur()
     {
-        return $this->belongsTo(Utilisateur::class,'id_utilisateur','id_utilisateur');
+        return $this->hasOne(utilisateur::class,'id_utilisateur','id_utilisateur');
     }
 
     public static function boot()
     {
         parent::boot();
         self::deleting(function($etudiant){
-            $etudiant->utilisateur()->delete();
+            DB::table('cour_etudiant')->where('etudiant_id',$etudiant->id_utilisateur)->delete();
             $etudiant->notes()->each(function($note){
                 $note->delete();
-            });
-            $etudiant->etudiantscours()->orderBy('cours_id')->
-            each(function($etudiant_cours){
-                $etudiant_cours->delete();
             });
 
         });

@@ -25,7 +25,10 @@ class UeController extends Controller
      */
     public function create()
     {
-        //
+        //returns the form for creating a new UE resource
+        return response()->json([
+            'message' => 'here you might add a new ue'
+        ]);
     }
 
     /**
@@ -41,7 +44,7 @@ class UeController extends Controller
             'nom_filiere' => 'bail|required|exists:filieres,nom_filiere',
             'niveau'      => 'bail|required|in:L,M,D|',
             'nom_ue'      => 'bail|required|regex:/^[a-zA-Z0-9\s\']*$/|min:6|max:60|unique:ue,libelle_ue',
-            'description' =>  'bail|required|min:10:max:255|regex:/^[a-zA-Z0-9\s\']*$/|'
+            'description' =>  'bail|required|min:10:max:255|regex:/^[a-zA-Z0-9\s\'\.\,]*$/|'
         ]);
         //verify if the given "nom_filiere" and "niveau" correspond to an existing filiere 
         $existingFiliere = Filiere::where('nom_filiere',$validatedRequest['nom_filiere'])

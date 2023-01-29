@@ -11,6 +11,7 @@ use App\Http\Controllers\UtilisateurController;
 use App\Http\Controllers\CoursController;
 use App\Http\Controllers\FiliereController;
 use App\Http\Controllers\UeController;
+use App\Http\Controllers\EdtController;
 
 
 /*
@@ -58,7 +59,10 @@ Route::post('/enseignants/{enseignantId}/{coursId}/addstudent',[EnseignantContro
 Route::get('/enseignants/{enseignantId}/{coursId}/{studentId}/addgrade',[EnseignantController::class,"assignGrade"]);
 // allows a teacher to give grades to a student for a given course 
 Route::post('/enseignants/{enseignantId}/{coursId}/{studentId}/addgrade',[EnseignantController::class,"storeGrade"]);
-
+// route that displays form for creating a new edt resource 
+Route::get('/newedt',[EdtController::class,"create"]);
+// route that allows the creation of a an edt resource 
+Route::post('/newedt',[EdtController::class,'store']);
 
 //route that dispalys a form so  new user can be created
 // the user is either a teacher or student  
@@ -73,5 +77,7 @@ Route::delete('/admin/filieres/{filiereId}',[FiliereController::class,'destroy']
 // allows an admin to create a new filiere 
 Route::post('/admin/newfiliere',[FiliereController::class,'store']);
 
+//Route that returns form for creating a new UE resource
+Route::get('/newue',[UeController::class,'create']);
 // route that allows creationg a new UE resource 
 Route::post('/newue',[UeController::class,'store']);

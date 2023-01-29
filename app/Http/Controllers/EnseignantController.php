@@ -329,6 +329,7 @@ class EnseignantController extends Controller
             );
         }
         $course_name = $course->nom_cours ;
+        $course_ueId = $course->id_ue;
         if($course->id_enseignant != $enseignantId)
         {
             return response()->json(
@@ -353,6 +354,15 @@ class EnseignantController extends Controller
         {
             return response()->json([
                 'message' => 'no student corresponds to your data, please verify'
+            ]);
+        }
+        // verify if the student is having the same filiere as cours by comparing to the id of UE to which the course belongs
+        $student_filiereId = $etudiant->id_filiere;
+        $owner_ue = EducationalUnit::find($course_ueId);
+        if($student_filiereId != $owner_ue->id_filiere)
+        {
+            return response()->json([
+                'message' => "the student can't be added to this course !"
             ]);
         }
         // verify if the student isn't already linked to the course 

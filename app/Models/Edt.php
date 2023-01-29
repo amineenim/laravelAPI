@@ -11,4 +11,13 @@ class Edt extends Model
 
     protected $table = 'edt';
     protected $primaryKey = 'id_edt';
+    public $timestamps = false;
+
+    protected $fillable = [
+        'id_filiere',
+        'id_cours',
+        'date_debut',
+        'date_fin',
+        'type_cours'
+    ];
 }

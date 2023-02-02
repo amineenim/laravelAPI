@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Enseignant;
 use App\Models\EducationalUnit;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Cours;
 
 class CoursController extends Controller
@@ -24,8 +25,9 @@ class CoursController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create($enseignantId)
+    public function create()
     {
+        $enseignantId = Auth::user()->id_utilisateur;
         //first verify if the passed id in URL corresponds to a teacher 
         $enseignant = Enseignant::find($enseignantId);
         if(!$enseignant)
@@ -45,8 +47,9 @@ class CoursController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request,$enseignantId)
+    public function store(Request $request)
     {
+        $enseignantId = Auth::user()->id_utilisateur;
         //
         $enseignant = Enseignant::find($enseignantId);
         if(!$enseignant)

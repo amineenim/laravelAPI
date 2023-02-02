@@ -10,6 +10,8 @@ use App\Models\Utilisateur;
 use App\Models\Filiere;
 use App\Models\EducationalUnit;
 use App\Models\Note;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Http\Request;
 
@@ -115,7 +117,7 @@ class EnseignantController extends Controller
             'nom'  => $validatedRequest['nom'],
             'prenom'  => $validatedRequest['prenom'],
             'email'  => $validatedRequest['email'],
-            'password' => $validatedRequest['password'],
+            'password' => Hash::make($validatedRequest['password']),
             'tel'    => $validatedRequest['phone']
         ]);
         // grab the id of the new user just created to create enseignant
@@ -199,8 +201,9 @@ class EnseignantController extends Controller
         return response()->json('deleted with succes',202);
     }
 
-    public function getMyCourses($enseignantId)
+    public function getMyCourses()
     {
+        $enseignantId = Auth::user()->id_utilisateur;
         $enseignant = Enseignant::find($enseignantId);
         if(!$enseignant)
         {
@@ -235,10 +238,17 @@ class EnseignantController extends Controller
         return ["mesCours" => $mesCours];
     }
 
-    public function getMyStudents($enseignantId, $coursId)
+    public function getMyStudents($coursId)
     {
+        $enseignantId = Auth::user()->id_utilisateur;
         //first get the teacher with the corresponding id 
         $teacher = Enseignant::find($enseignantId);
+        if(!$teacher)
+        {
+            return response()->json([
+                'message' => 'no resource enseignant found !'
+            ]);
+        }
         //verify if the course actually corresponds to the teacher 
         $course = Cours::find($coursId);
         if(!$course)
@@ -259,7 +269,9 @@ class EnseignantController extends Controller
         $nom_cours = $teacher_course[0]->nom_cours;
         if(count($teacher_course) == 0)
         {
-            return "no such course for the teacher with id ".$enseignantId ;
+            return response()->json([
+                'message' => 'no courses yet found !'
+            ]);
         }
         else 
         {

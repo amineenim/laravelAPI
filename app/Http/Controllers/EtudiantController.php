@@ -12,6 +12,8 @@ use App\Models\Utilisateur;
 use App\Models\Filiere;
 use App\Models\EducationalUnit;
 use App\Models\Edt;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class EtudiantController extends Controller
 {
@@ -96,7 +98,7 @@ class EtudiantController extends Controller
             'nom'  => $validatedRequest['nom'],
             'prenom'  => $validatedRequest['prenom'],
             'email'  => $validatedRequest['email'],
-            'password' => $validatedRequest['password'],
+            'password' => Hash::make($validatedRequest['password']),
             'tel'    => $validatedRequest['phone']
         ]);
          //grab the user just created to get his Id 
@@ -199,8 +201,10 @@ class EtudiantController extends Controller
         return response()->json('deleted successefully',202);
     }
 
-    public function getMyGrades($studentId)
+    public function getMyGrades()
     {
+        //get the currently authenticated user id 
+        $studentId = Auth::user()->id_utilisateur;
         //grab the student with the given id 
         $student = Etudiant::find($studentId);
         //grab all courses related to the student
@@ -253,9 +257,9 @@ class EtudiantController extends Controller
     }
 
     // function that allows a student to check all it's courses 
-    public function getMyCourses($studentId)
+    public function getMyCourses()
     {
-        
+        $studentId = Auth::user()->id_utilisateur;
         //grab the student with the given id 
         $student = Etudiant::find($studentId);
         if(!$student)
@@ -313,8 +317,9 @@ class EtudiantController extends Controller
     }
 
     // returns EDT for a given student 
-    public function getMySchedule($studentId)
+    public function getMySchedule()
     {
+        $studentId = Auth::user()->id_utilisateur ;
         // grab the student to get his filiere 
         $student = Etudiant::find($studentId);
         if(!$student)
@@ -402,6 +407,12 @@ class EtudiantController extends Controller
 
             }
 
+        }
+        if(count($coursesWithEdt) == 0)
+        {
+            return response()->json([
+                'message' => "u don't have no courses for the moment !"
+            ]);
         }
         return response()->json(['data' => $coursesWithEdt]);
 

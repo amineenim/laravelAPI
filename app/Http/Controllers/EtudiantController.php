@@ -14,6 +14,7 @@ use App\Models\EducationalUnit;
 use App\Models\Edt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class EtudiantController extends Controller
 {
@@ -24,6 +25,14 @@ class EtudiantController extends Controller
      */
     public function index()
     {
+        //verify if the user is having authorization to view this page 
+        $currentUser = Auth::user();
+        if($currentUser->cannot('viewAny'))
+        {
+            return response()->json([
+                'message' => 'unauthorized ! only admin can view this page'
+            ],403);
+        }
         //this function returns all students in Database 
         $students = Etudiant::all();
         // loop over students and get data for each one 
@@ -61,7 +70,16 @@ class EtudiantController extends Controller
      */
     public function create(Request $request)
     {
-        //
+        //verify if the currently authenticad user has authorization to create a new student
+        if($request->user()->cannot('create'))
+        {
+            return response()->json([
+                'message' => 'Not authorized !'
+            ],403);
+        }
+        return response()->json([
+            'message' => 'here u can create a new student'
+        ]);
     }
 
     /**
@@ -73,6 +91,14 @@ class EtudiantController extends Controller
     public function store(Request $request)
     {
         // this function allows to create a new student resoource
+        //verify if the currently authenticad user has authorization to create a new student
+        if($request->user()->cannot('create'))
+        {
+            return response()->json([
+                'message' => 'Not authorized !'
+            ],403);
+        }
+        
          $validatedRequest = $request->validate([
             'role' => 'required|in:user,admin,User,Admin',
             'nom' => 'bail|required|alpha|min:3|max:255',
@@ -122,10 +148,8 @@ class EtudiantController extends Controller
      * @param  \App\Models\Student  $student
      * @return \Illuminate\Http\Response
      */
-    public function show($studentId)
+    public function show(Request $request,$studentId)
     {
-        //this method returns a single student with his id 
-        
         $etudiant = Etudiant::find($studentId);
         if(!$etudiant)
         {
@@ -133,7 +157,14 @@ class EtudiantController extends Controller
                 ['message' => 'no such student found !']
             );
         }
-       
+        //verify if the authenticated user is authorized to view this resource 
+        if($request->user()->cannot('view',$etudiant))
+        {
+            return response()->json([
+                'message' => 'unauthorized action !'
+            ],403);
+        }
+        
         // get all other data about student from utilisateurs table
         $user = Utilisateur::find($studentId);
         $nom_etudiant = $user['nom']." ".$user["prenom"];
@@ -161,9 +192,24 @@ class EtudiantController extends Controller
      * @param  \App\Models\Student  $student
      * @return \Illuminate\Http\Response
      */
-    public function edit(Etudiant $student)
+    public function edit($studentId)
     {
-        //
+        $student = Etudiant::find($studentId);
+        if(!$student)
+        {
+            return response()->json([
+                'message' => 'no resource found !'
+            ]);
+        }
+        //verify if the user is authorized to perform update againt this resource
+        if(Auth::user()->cannot('update',$student))
+        {
+            return response()->json([
+                'message' => 'Unauthorized action !'
+            ],403);
+        }
+        //returns a form to update a student resource
+        return 'here you can update a student profile ';
     }
 
     /**
@@ -175,7 +221,30 @@ class EtudiantController extends Controller
      */
     public function update(Request $request, Etudiant $student)
     {
-        //
+        //verify if the user is authorized to perform update action against this resource
+        if(Auth::user()->cannot('update',$student))
+        {
+            return response()->json([
+                'message' => 'Unauthorized action !'
+            ],403);
+        }
+        // handles updating the student resource in storage 
+        // a student can only modify it's email, password and phone 
+        $validatedRequest = $request->validate([
+            'email' => 'required|email|unique:utilisateurs,email|max:255',
+            'password' => 'required|alpha_dash|min:8|max:14',
+            'tel'   => 'bail|required|digits:10'
+        ]);
+        // now we can update corresponding resource in storage 
+        $user = Utilisateur::find($student->id_utilisateur);
+        $user->update([
+            'email' => $validatedRequest['email'],
+            'password' => Hash::make($validatedRequest['password']),
+            'tel'     => $validatedRequest['tel']
+        ]);
+        return response()->json([
+            'message' => 'resource updated succesfully !'
+        ]);
     }
 
     /**
@@ -194,6 +263,14 @@ class EtudiantController extends Controller
                 ['message' => 'resource student not found !']
             );
         }
+        //verify if the user has the authorization to delete the resource 
+        if(Auth::user()->cannot('delete',$studentToDelete))
+        {
+            return response()->json([
+                'message' => 'Unautorized Action'
+            ],403);
+        }
+        
         // delete the user corresponding to that student
         //$userToDelete = Utilisateur::find($studentId);
         //$userToDelete->delete();
@@ -203,6 +280,13 @@ class EtudiantController extends Controller
 
     public function getMyGrades()
     {
+        // verify if the user is authorized to view this page 
+        if(!Gate::allows('view-grades'))
+        {
+            return response()->json([
+                'message' => 'unauthorized'
+            ],403);
+        }
         //get the currently authenticated user id 
         $studentId = Auth::user()->id_utilisateur;
         //grab the student with the given id 
@@ -259,6 +343,12 @@ class EtudiantController extends Controller
     // function that allows a student to check all it's courses 
     public function getMyCourses()
     {
+        if(!Gate::allows('view-courses-student'))
+        {
+            return response()->json([
+                'message' => 'unauthorized'
+            ],403);
+        }
         $studentId = Auth::user()->id_utilisateur;
         //grab the student with the given id 
         $student = Etudiant::find($studentId);
@@ -319,6 +409,13 @@ class EtudiantController extends Controller
     // returns EDT for a given student 
     public function getMySchedule()
     {
+        // verify if the user has authorization 
+        if(!Gate::allows('view-edt'))
+        {
+            return response()->json([
+                'message' => 'unauthorized !'
+            ]);
+        }
         $studentId = Auth::user()->id_utilisateur ;
         // grab the student to get his filiere 
         $student = Etudiant::find($studentId);

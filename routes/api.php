@@ -54,13 +54,13 @@ Route::group(['middleware' => ['auth:sanctum']],function(){
     // handles creating the course by teacher
     Route::post('/enseignants/addcourse',[CoursController::class,'store']);
     // returns a form to add a student to a given course 
-    Route::get('/enseignants/{enseignantId}/{coursId}/addstudent',[EnseignantController::class,"addStudent"]);
+    Route::get('/enseignants/{coursId}/addstudent',[EnseignantController::class,"addStudent"]);
     // handles adding a student to a given course by a teacher 
-    Route::post('/enseignants/{enseignantId}/{coursId}/addstudent',[EnseignantController::class,"addStudentToCourse"]);
+    Route::post('/enseignants/{coursId}/addstudent',[EnseignantController::class,"addStudentToCourse"]);
     // displays a form to teacher so it can give grade to a student for given course
-    Route::get('/enseignants/{enseignantId}/{coursId}/{studentId}/addgrade',[EnseignantController::class,"assignGrade"]);
+    Route::get('/enseignants/{coursId}/{studentId}/addgrade',[EnseignantController::class,"assignGrade"]);
     // allows a teacher to give grades to a student for a given course 
-    Route::post('/enseignants/{enseignantId}/{coursId}/{studentId}/addgrade',[EnseignantController::class,"storeGrade"]);
+    Route::post('/enseignants/{coursId}/{studentId}/addgrade',[EnseignantController::class,"storeGrade"]);
     // handling enseignants 
     Route::resource('enseignants',EnseignantController::class);
     // route that displays form for creating a new edt resource 

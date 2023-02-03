@@ -324,15 +324,16 @@ class EnseignantController extends Controller
     }
 
     //this function returns simply a form aalowing teacher to add a student to a given course
-    public function addStudent($enseignantId,$coursId)
+    public function addStudent($coursId)
     {
-        return 'here you may add a student to your course with id '.$coursId.' and you are teacher with id '.$enseignantId ;
+        return 'here you may add a student to your course with id '.$coursId.' and you are teacher with id '.Auth::user()->id ;
     }
 
     //this function handles the submission of the form and creating the link between the student and course
-    public function addStudentToCourse(Request $request,$enseignantId,$coursId)
+    public function addStudentToCourse(Request $request,$coursId)
     {
         //verify if the course belongs to the given teacher 
+        $enseignantId = Auth::user()->id;
         $course = Cours::find($coursId);
         if(!$course)
         {
@@ -400,7 +401,7 @@ class EnseignantController extends Controller
     }
 
     //this function handles displaying a form so the teacher can give grade to student
-    public function assignGrade($enseignantId,$coursId,$studentId)
+    public function assignGrade($coursId,$studentId)
     {
         $cours = Cours::find($coursId);
         if(!$cours)
@@ -410,6 +411,7 @@ class EnseignantController extends Controller
             ]);
         }
         $nom_cours = $cours->nom_cours;
+        $enseignantId = Auth::user()->id;
         //verify if the course belongs to the given teacher 
         if($cours->id_enseignant != $enseignantId)
         {
@@ -457,7 +459,7 @@ class EnseignantController extends Controller
     }
 
     //this function handles storing the grade of the student for a given course
-    public function storeGrade(Request $request,$enseignantId,$coursId,$studentId)
+    public function storeGrade(Request $request,$coursId,$studentId)
     {
         //verify if the grade already exists in table notes 
         $grade = Note::where('id_utilisateur',$studentId)
@@ -476,6 +478,7 @@ class EnseignantController extends Controller
                 'message' => 'no ressource found !'
             ]);
         }
+        $enseignantId = Auth::user()->id;
         if($course->id_enseignant != $enseignantId)
         {
             return response()->json([

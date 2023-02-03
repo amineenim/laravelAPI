@@ -31,6 +31,12 @@ class Utilisateur extends Authenticatable
     {
         return $this->hasOne(Enseignant::class,'id_utilisateur','id_utilisateur');
     }
+    public function isStudent()
+    {
+        // verify if a given $user is student 
+        $correspondingStudent = Etudiant::find($this->id_utilisateur);
+        return $correspondingStudent ? true : false ;
+    }
 
     public static function boot()
     {

@@ -30,7 +30,7 @@ class AuthController extends Controller
                 'message' => "the given credentials don't match our records"
             ]);
         }
-        // retreive the user with corresponding email adress
+        // retreive the user with corresponding email address
         $userToAuthenticate = Utilisateur::where('email',$validatedRequest['email'])->first();
         // get th user id 
         $id = Auth::id();
@@ -77,6 +77,10 @@ class AuthController extends Controller
     // function that handles loging out a user
     public function logout()
     {
-
+        //delete the authenticated user Token
+        Auth::user()->currentAccessToken()->delete();
+        return response()->json([
+            'message' => 'logged out successfully !'
+        ]);
     }
 }

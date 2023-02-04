@@ -50,9 +50,9 @@ Route::group(['middleware' => ['auth:sanctum']],function(){
     // get all students for a given teacher course 
     Route::get('/enseignants/{coursId}/mystudents',[EnseignantController::class,"getMyStudents"]);
     // allows a teacher to create a course, so it renders a view with form 
-    Route::get('/enseignants/addcourse',[CoursController::class,'create']);
+    Route::get('/enseignants/addcourse',[CoursController::class,'create']);/**no authorization */
     // handles creating the course by teacher
-    Route::post('/enseignants/addcourse',[CoursController::class,'store']);
+    Route::post('/enseignants/addcourse',[CoursController::class,'store']);/** no authoriz */
     // returns a form to add a student to a given course 
     Route::get('/enseignants/{coursId}/addstudent',[EnseignantController::class,"addStudent"]);
     // handles adding a student to a given course by a teacher 

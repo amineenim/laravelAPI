@@ -27,7 +27,7 @@ class EtudiantController extends Controller
     {
         //verify if the user is having authorization to view this page 
         $currentUser = Auth::user();
-        if($currentUser->cannot('viewAny'))
+        if($currentUser->cannot('viewAny',Etudiant::class))
         {
             return response()->json([
                 'message' => 'unauthorized ! only admin can view this page'

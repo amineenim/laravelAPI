@@ -38,6 +38,13 @@ class Utilisateur extends Authenticatable
         return $correspondingStudent ? true : false ;
     }
 
+    public function isTeacher()
+    {
+        // verify if the user is a teacher and returns a boolean value 
+        $correspondingTeacher = Enseignant::find($this->id_utilisateur);
+        return $correspondingTeacher ? true : false;
+    }
+
     public static function boot()
     {
         parent::boot();

@@ -12,6 +12,7 @@ use App\Models\EducationalUnit;
 use App\Models\Note;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 use Illuminate\Http\Request;
 
@@ -21,6 +22,14 @@ class EnseignantController extends Controller
     /* returns a listing of all enseignants */
     public function index()
     {
+        
+        //verify if the user is an admin so it's authorized
+        if(!Auth::user()->can('viewAny',Enseignant::class))
+        {
+            return response()->json([
+                'message' => 'Non authorized '
+            ],403);
+        }
         $enseignants = Enseignant::all();
         //loop over enseignants array and for each element 
         // grab complementary data about it using id
@@ -66,14 +75,28 @@ class EnseignantController extends Controller
 
     public function show($enseignantId)
     {
-        //grab the teacher with the given id 
         $teacher = Enseignant::find($enseignantId);
-        if(!$teacher)
+        if(!$teacher && Auth::user()->role =='admin')
         {
-            return response()->json(
-                ['message' => 'no teacher found']
-            );
+            return response()->json([
+                'message' => 'Not Found'
+            ],404);
         }
+        if(!$teacher && Auth::user()->role =='user')
+        {
+            return response()->json([
+                'message' => 'unauthorized'
+            ],403);
+        }
+        //verify if the user is authorized to view a teacher resource
+        if(!Auth::user()->can('view',$teacher))
+        {
+            return response()->json([
+                'message' => 'unauthorized action'
+            ],403);
+        }
+        //grab the teacher with the given id 
+        
         
         $responsability = $teacher['responsabilite_ens'];
         $horaire = $teacher['volume_horaire'];
@@ -95,12 +118,26 @@ class EnseignantController extends Controller
 
     public function create()
     {
+        //verify if the user is authorized 
+        if(!Auth::user()->can('create',Enseignant::class))
+        {
+            return response()->json([
+                'message' => 'unauthorized'
+            ],403);
+        }
         //return a form to create a new teacher 
     }
 
     // alows creating a new teacher resource
     public function store(Request $request)
     {
+        //verify if the user is authorized 
+        if(!Auth::user()->can('create',Enseignant::class))
+        {
+            return response()->json([
+                'message' => 'unauthorized'
+            ],403);
+        }
         $validatedRequest = $request->validate([
             'role' => 'required|in:user,admin,User,Admin',
             'nom' => 'bail|required|alpha|min:3|max:255',
@@ -134,17 +171,27 @@ class EnseignantController extends Controller
 
     public function update($enseignantId,Request $request)
     {
-        //normally an admin can change other data about the teacher 
-        // i'll add it one i implement policies and gates
-        //this function handles both put which changes all the ressource 
-        // and patch which changes a part of the ressource 
         $teacher = Enseignant::find($enseignantId);
-        if(!$teacher)
+        if(!$teacher && $request->user()->role == 'admin')
         {
             return response()->json([
-                'message' => 'no such teacher found !'
-            ]);
+                'message' => 'no such resource teacher found !'
+            ],404);
         }
+        if(!$teacher && $request->user()->role == 'user')
+        {
+            return response()->json([
+                'message' => 'Non authorized action'
+            ],403);
+        }
+        // check if the user is authorized to update a teacher resource
+        if(!$request->user()->can('update',$teacher))
+        {
+            return response()->json([
+                'message' => 'Non authorized action'
+            ],403);
+        }
+        
         $corresponding_user = Utilisateur::find($teacher->id_utilisateur);
        // teacher can only modify it's email and phone number 
        $validatedRequest = $request->validate([
@@ -177,17 +224,24 @@ class EnseignantController extends Controller
     public function destroy($enseignantId)
     {
         $enseignantToDelete = Enseignant::find($enseignantId);
-        if(!$enseignantToDelete)
+        if(!$enseignantToDelete && Auth::user()->role =='admin')
         {
             return response()->json([
                 'message' => 'no such resource found !'
-            ]);
+            ],404);
         }
-        if(!$enseignantToDelete)
+        elseif (!$enseignantToDelete && Auth::user()->role =='user')
         {
             return response()->json([
-                'message' => 'no such resource found !'
-            ]);
+                'message' => 'unauthorized'
+            ],403);
+        }
+        //verify if the user is authorized to perform this action
+        if(!Auth::user()->can('delete',$enseignantToDelete))
+        {
+            return response()->json([
+                'message' => 'unauthorized'
+            ],403);
         }
         //look if there is a filiere who has the user as responsable 
         $filiereToDelete = Filiere::where('id_responsable',$enseignantId)->first();
@@ -198,11 +252,18 @@ class EnseignantController extends Controller
         //$userToDelete = Utilisateur::find($enseignantToDelete->id_utilisateur);
         //$userToDelete->delete();
         $enseignantToDelete->delete();
-        return response()->json('deleted with succes',202);
+        return response()->json(['deleted with succes'],202);
     }
 
     public function getMyCourses()
     {
+        // verify if the user is authorized to check this page
+        if(!Gate::allows('view-courses-teacher'))
+        {
+            return response()->json([
+                'message' => 'Non Authorized !'
+            ]);
+        }
         $enseignantId = Auth::user()->id_utilisateur;
         $enseignant = Enseignant::find($enseignantId);
         if(!$enseignant)
@@ -240,28 +301,13 @@ class EnseignantController extends Controller
 
     public function getMyStudents($coursId)
     {
+        //verify if the user has the authorization to view 
+        // students for a given course
         $enseignantId = Auth::user()->id_utilisateur;
-        //first get the teacher with the corresponding id 
-        $teacher = Enseignant::find($enseignantId);
-        if(!$teacher)
+        if(!Gate::allows('view-students-for-my-course',[$coursId]))
         {
             return response()->json([
-                'message' => 'no resource enseignant found !'
-            ]);
-        }
-        //verify if the course actually corresponds to the teacher 
-        $course = Cours::find($coursId);
-        if(!$course)
-        {
-            return response()->json([
-                'message' => 'no resource found !'
-            ]);
-        }
-        // now that the course exists, verify if it belongs to teacher 
-        if($course->id_enseignant != $enseignantId)
-        {
-            return response()->json([
-                'message' => 'unauthorized !'
+                'message' => 'Unauthorized action'
             ]);
         }
         //get the course for the corresponding coursId 
@@ -316,7 +362,9 @@ class EnseignantController extends Controller
                 }
                 return [$nom_cours => $studentsData];
             }else {
-                return response()->json("you have no students for the course ".$nom_cours,200);
+                return response()->json([
+                    'message' => "you have no students for the course ".$nom_cours
+                ],200);
             }
             
         }
@@ -326,30 +374,31 @@ class EnseignantController extends Controller
     //this function returns simply a form aalowing teacher to add a student to a given course
     public function addStudent($coursId)
     {
+        //verify if the user has authorization to hit this route
+        if(!Gate::allows('add-student-to-my-course',[$coursId]))
+        {
+            return response()->json([
+                'message' => 'unauthorized action'
+            ]);
+        }
         return 'here you may add a student to your course with id '.$coursId.' and you are teacher with id '.Auth::user()->id ;
     }
 
     //this function handles the submission of the form and creating the link between the student and course
     public function addStudentToCourse(Request $request,$coursId)
     {
+        //verify if the user has authorization to hit this route
+        if(!Gate::allows('add-student-to-my-course',[$coursId]))
+        {
+            return response()->json([
+                'message' => 'unauthorized action'
+            ]);
+        }
         //verify if the course belongs to the given teacher 
         $enseignantId = Auth::user()->id;
         $course = Cours::find($coursId);
-        if(!$course)
-        {
-            return response()->json(
-                ["message" => "no such course found !"]
-            );
-        }
         $course_name = $course->nom_cours ;
         $course_ueId = $course->id_ue;
-        if($course->id_enseignant != $enseignantId)
-        {
-            return response()->json(
-                ["message" => "sorry you're not allowed to modify this course, it's not yours"]
-            );
-        }
-        //now that the teacher is the owner of the given course 
         // we proceed to validate data 
         $validatedRequest = $request->validate([
             'nom_eleve' => 'required|exists:App\Models\Utilisateur,nom',
@@ -396,49 +445,30 @@ class EnseignantController extends Controller
 
         return response()->json([
             'message' => 'student added to course '. $course_name.' with succes'
-        ]);
+        ],201);
         
     }
 
     //this function handles displaying a form so the teacher can give grade to student
     public function assignGrade($coursId,$studentId)
     {
-        $cours = Cours::find($coursId);
-        if(!$cours)
+        //verify if the user is authorized 
+        if(!Gate::allows('assign-grade',[$studentId,$coursId]))
         {
             return response()->json([
-                'message' => 'no such course found !'
-            ]);
+                'message' => 'action Non Authorized'
+            ],403);
         }
+        $cours = Cours::find($coursId);
         $nom_cours = $cours->nom_cours;
         $enseignantId = Auth::user()->id;
-        //verify if the course belongs to the given teacher 
-        if($cours->id_enseignant != $enseignantId)
-        {
-            return response()->json(
-                ['message' => 'sorry, you don t have authorization ta handle the course '.$nom_cours]
-            );
-        }
-        //verify if the student is having the given course or not 
-        $student = Etudiant::find($studentId);
-        if(!$student)
-        {
-            return response()->json(
-                ["message" => "no such student found!"]
-            );
-        }
+    
+    
         $user = Utilisateur::find($studentId);
         $studenFullName = $user->nom." ".$user->prenom;
         $studentemail = $user->email;
 
-        $student_course = EtudiantCours::where('cours_id',$coursId)
-        ->where('etudiant_id',$studentId)->first();
-        if(!$student_course)
-        {
-            return response()->json([
-                "message" => "unauthorized operation, student not having course"
-            ]);
-        }
+        $student = Etudiant::find($studentId);
         $id_filiere = $student->id_filiere;
         $filiere = Filiere::find($id_filiere);
         $nom_filiere = $filiere->nom_filiere;
@@ -461,6 +491,13 @@ class EnseignantController extends Controller
     //this function handles storing the grade of the student for a given course
     public function storeGrade(Request $request,$coursId,$studentId)
     {
+        //verify if the user is authorized 
+        if(!Gate::allows('assign-grade',[$studentId,$coursId]))
+        {
+            return response()->json([
+                'message' => 'action Non Authorized'
+            ],403);
+        }
         //verify if the grade already exists in table notes 
         $grade = Note::where('id_utilisateur',$studentId)
         ->where('id_cours',$coursId)->first();
@@ -470,30 +507,7 @@ class EnseignantController extends Controller
                 'message' => "étudiant déja noté !"
             ]);
         }
-        //verify if the course belongs to teacher 
-        $course = Cours::find($coursId);
-        if(!$course)
-        {
-            return response()->json([
-                'message' => 'no ressource found !'
-            ]);
-        }
-        $enseignantId = Auth::user()->id;
-        if($course->id_enseignant != $enseignantId)
-        {
-            return response()->json([
-                'message' => 'unauthorized operation !'
-            ]);
-
-        }
-        //verify if the student actually is having the course 
-        $etudiant_cours = EtudiantCours::where('cours_id',$coursId)->where('etudiant_id',$studentId)->first();
-        if(!$etudiant_cours)
-        {
-            return response()->json([
-                'message' => 'the given student is not having the course'
-            ]);
-        }
+     
         //here we only should validate the grade and maybe redirect 
         $validatedRequest = $request->validate([
             'note' => 'required|numeric|between:0,20.00'

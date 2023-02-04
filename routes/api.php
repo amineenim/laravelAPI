@@ -50,9 +50,9 @@ Route::group(['middleware' => ['auth:sanctum']],function(){
     // get all students for a given teacher course 
     Route::get('/enseignants/{coursId}/mystudents',[EnseignantController::class,"getMyStudents"]);
     // allows a teacher to create a course, so it renders a view with form 
-    Route::get('/enseignants/addcourse',[CoursController::class,'create']);/**no authorization */
+    Route::get('/enseignants/addcourse',[CoursController::class,'create']);
     // handles creating the course by teacher
-    Route::post('/enseignants/addcourse',[CoursController::class,'store']);/** no authoriz */
+    Route::post('/enseignants/addcourse',[CoursController::class,'store']);
     // returns a form to add a student to a given course 
     Route::get('/enseignants/{coursId}/addstudent',[EnseignantController::class,"addStudent"]);
     // handles adding a student to a given course by a teacher 
@@ -74,6 +74,8 @@ Route::group(['middleware' => ['auth:sanctum']],function(){
     // this route will redirect after submission to one 
     // of the routes for creating a teacher or student with post method
 
+    // allows an admin to check all courses 
+    Route::get('/admin/allcourses',[CoursController::class,'index']);
     // allows an admin to consult all filieres 
     Route::get('/admin/filieres',[FiliereController::class,'index']);
     // allows an admin to delete a filiere 

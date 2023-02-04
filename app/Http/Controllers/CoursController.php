@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Enseignant;
 use App\Models\EducationalUnit;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Utilisateur;
+use App\Models\Filiere;
 use App\Models\Cours;
 
 class CoursController extends Controller
@@ -17,7 +19,41 @@ class CoursController extends Controller
      */
     public function index()
     {
-        //
+        //check if the user is authorized to view all Cours resources
+        if(!Auth::user()->can('viewAny',Cours::class))
+        {
+            return response()->json([
+                'message' => 'unauthorized'
+            ],403);
+        }
+        $allCourses = Cours::all();
+        $data = [];
+        // loop over the array of courses and for each course grab 
+        //the name and the ue to which it belongs and teacher
+        foreach($allCourses as $course)
+        {
+            // get the teacher 
+            $enseignant = Utilisateur::find($course->id_enseignant);
+            $nom_prof = $enseignant->nom." ".$enseignant->prenom;
+            $contact = $enseignant->email;
+            // get the ue 
+            $educationaUnit = EducationalUnit::find($course->id_ue);
+            $nom_ue = $educationaUnit->libelle_ue;
+            $nom_filiere = Filiere::find($educationaUnit->id_filiere)->nom_filiere;
+            $dataCourse = (object)[
+                'nom_cours' => $course->nom_cours,
+                'unite_enseignement' => $nom_ue,
+                'filiere'     => $nom_filiere,
+                'professeur'  => (object) [
+                    'nom' => $nom_prof,
+                    'contact' => $contact
+                ]
+            ];
+            array_push($data,$dataCourse);
+        }
+        return response()->json([
+            'data' => $data
+        ],200);
     }
 
     /**
@@ -27,14 +63,12 @@ class CoursController extends Controller
      */
     public function create()
     {
-        $enseignantId = Auth::user()->id_utilisateur;
-        //first verify if the passed id in URL corresponds to a teacher 
-        $enseignant = Enseignant::find($enseignantId);
-        if(!$enseignant)
+        //verify if the user is authorized 
+        if(!Auth::user()->can('create',Cours::class))
         {
-            return response()->json(
-                ['message' => 'you are not allowed to create course !']
-            );
+            return response()->json([
+                'message' => 'unauthorized action'
+            ],403);
         }
         return response()->json(
             ['message' => 'here you can create a course via form']
@@ -49,15 +83,17 @@ class CoursController extends Controller
      */
     public function store(Request $request)
     {
+         //verify if the user is authorized 
+         if(!Auth::user()->can('create',Cours::class))
+         {
+             return response()->json([
+                 'message' => 'unauthorized action'
+             ],403);
+         }
         $enseignantId = Auth::user()->id_utilisateur;
-        //
+        
         $enseignant = Enseignant::find($enseignantId);
-        if(!$enseignant)
-        {
-            return response()->json(
-                ['message' => 'you are not allowed to create course !']
-            );
-        }
+      
         // now that we are sure that a teacher is the one creating the course
         //validate request data
         $validatedRequest = $request->validate([

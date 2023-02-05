@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Filiere;
 use App\Models\Enseignant;
 use App\Models\Utilisateur;
+use Illuminate\Support\Facades\Gate;
 
 class FiliereController extends Controller
 {
@@ -16,7 +17,13 @@ class FiliereController extends Controller
      */
     public function index()
     {
-        //
+        //verify if the user is authorized to view all resources filiere 
+        if(!Gate::allows('view-filieres'))
+        {
+            return response()->json([
+                'message' => 'not authorized'
+            ],403);
+        }
         $filieres = Filiere::all() ;
         //loop over $filieres array and for each grab the name of the responsable teacher
         //initialise an empty array to hold data about all filieres
@@ -68,6 +75,13 @@ class FiliereController extends Controller
      */
     public function store(Request $request)
     {
+        // verify if the user is authorized to perform this action
+        if(!Gate::allows('create-filiere'))
+        {
+            return response()->json([
+                'message' => 'unauthorized action'
+            ],403);
+        }
         //this function hadnles creating a new filiere
         $validatedRequest = $request->validate([
             'nom_filiere' => 'bail|required|regex:/^[a-zA-Z\s]*$/|min:10|max:60',
@@ -143,7 +157,13 @@ class FiliereController extends Controller
      */
     public function destroy($filiereId)
     {
-        //
+        // verify if the user is authorized to perform this action
+        if(!Gate::allows('delete-filiere'))
+        {
+            return response()->json([
+                'message' => 'unauthorized action'
+            ],403);
+        }
         $filiereToDelete = Filiere::find($filiereId);
         if(!$filiereToDelete)
         {

@@ -59,7 +59,11 @@ class CoursPolicy
      */
     public function update(Utilisateur $utilisateur, Cours $cours)
     {
-        //
+        //only the teacher owner of the course can update the course resource
+        //this route is only accessible to teachers 
+        $firstCheck = $utilisateur->isTeacher() ? true : false ;
+        $secondCheck = $utilisateur->id_utilisateur === $cours->id_enseignant ;
+        return $firstCheck && $secondCheck ? true : false;
     }
 
     /**
@@ -72,7 +76,9 @@ class CoursPolicy
     public function delete(Utilisateur $utilisateur, Cours $cours)
     {
         //only the teacher who owns the course model can delete it 
-        return $utilisateur->id_utilisateur === $cours->id_enseignant;
+        $firstCheck = $utilisateur->isTeacher() ? true :false;
+        $secondCheck = $utilisateur->id_utilisateur === $cours->id_enseignant;
+        return $firstCheck && $secondCheck ? true : false;
     }
 
     /**

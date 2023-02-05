@@ -128,7 +128,8 @@ class CoursController extends Controller
      */
     public function show($id)
     {
-        //
+        //this method displays a single course data based on it's id
+
     }
 
     /**
@@ -139,7 +140,25 @@ class CoursController extends Controller
      */
     public function edit($id)
     {
-        //
+        //form to edit a specific course resource
+        //verify if the user is authorized 
+        $course = Cours::find($id);
+        if(!Auth::user()->can('update',$course))
+        {
+            return response()->json([
+                'message' => 'Non Authorized Action'
+            ],403);
+        }
+        // now that the user is authorized, grab data about the course to display it in form 
+        $nom_cours = $course->nom_cours;
+        $nom_ue    = EducationalUnit::find($course->id_ue)->libelle_ue;
+        return (object)[
+            'message' => 'here u can edit the course',
+            'data'    => (object)[
+                'nomCours' => $nom_cours,
+                'unite_enseignement' => $nom_ue
+            ]
+        ];
     }
 
     /**
@@ -151,7 +170,30 @@ class CoursController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $course = Cours::find($id);
+        //verify if the user is authorized to perform this action
+        if(!$request->user()->can('update',$course))
+        {
+            return response()->json([
+                'message' => 'unauthorized action'
+            ],403);
+        }
+        // validate request 
+        $validatedRequest = $request->validate([
+            'nomCours' => 'required|min:3|max:60|regex:/^[a-zA-Z\s]*$/',
+            'nomUe'    => 'required|exists:App\Models\EducationalUnit,libelle_ue'
+        ]);
+        // get the id of the ue based on it's name
+   
+        $idUe = EducationalUnit::where('libelle_ue',$validatedRequest['nomUe'])->first()->id_ue;
+        // update the corresponding resource in storage 
+        $course->update([
+            'nom_cours' => $validatedRequest['nomCours'],
+            'id_ue'     => $idUe
+        ]);
+        return response()->json([
+            'message' => 'updated with success'
+        ]);
     }
 
     /**
@@ -162,6 +204,17 @@ class CoursController extends Controller
      */
     public function destroy($id)
     {
-        //
+        //verify if the user is authorized to delete the course resource
+        $course = Cours::find($id);
+        if(!Auth::user()->can('delete',$course))
+        {
+            return response()->json([
+                'message' => 'unauthorized !'
+            ],403);
+        }
+        $course->delete();
+        return response()->json([
+            'message' => 'deleted successfully !'
+        ],202);
     }
 }

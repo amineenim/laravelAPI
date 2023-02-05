@@ -53,6 +53,12 @@ Route::group(['middleware' => ['auth:sanctum']],function(){
     Route::get('/enseignants/addcourse',[CoursController::class,'create']);
     // handles creating the course by teacher
     Route::post('/enseignants/addcourse',[CoursController::class,'store']);
+    // returns a form to edit a given course by teacher 
+    Route::get('/enseignants/mescours/{coursId}/edit',[CoursController::class,'edit']);
+    // handles modifying a course resource in storage 
+    Route::post('/enseignants/mescours/{coursId}',[CoursController::class,'update']);
+    // handles deleting a cours resource by teacher 
+    Route::delete('/enseignants/mescours/{coursId}',[CoursController::class,'destroy']);
     // returns a form to add a student to a given course 
     Route::get('/enseignants/{coursId}/addstudent',[EnseignantController::class,"addStudent"]);
     // handles adding a student to a given course by a teacher 

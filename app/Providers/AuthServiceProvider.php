@@ -131,5 +131,23 @@ class AuthServiceProvider extends ServiceProvider
             return $firstCheck && $secondCheck && $studentCourse ? true : false;
         });
 
+        //Gate that allows an admin to viewAny filiere (all filieres)
+        Gate::define('view-filieres',function(Utilisateur $user){
+            //determine if the user is an administrator
+            return $user->role == 'admin' || $user->role == 'Admin';
+        });
+
+        //Gate that allows an admin to create new filiere resource 
+        Gate::define('create-filiere',function(Utilisateur $user){
+            //determine if the user is an administrator
+            return $user->role == 'admin' || $user->role == 'Admin';
+        });
+
+        //Gate that allows an admin to delete a filiere resource
+        Gate::define('delete-filiere',function(Utilisateur $user){
+            //determine if the user is an administrator
+            return $user->role == 'admin' || $user->role == 'Admin';
+        });
+
     }
 }

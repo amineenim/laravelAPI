@@ -12,6 +12,9 @@ use App\Models\EtudiantCours;
 use App\Policies\EtudiantPolicy;
 use App\Models\Enseignant;
 use App\Policies\EnseignantPolicy;
+use App\Models\EducationalUnit;
+use App\Policies\EducationalUnitPolicy;
+
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -24,6 +27,7 @@ class AuthServiceProvider extends ServiceProvider
         // 'App\Models\Model' => 'App\Policies\ModelPolicy',
         Etudiant::class   => EtudiantPolicy::class,
         Enseignant::class => EnseignantPolicy::class,
+        EducationalUnit::class => EducationalUnitPolicy::class,
     ];
 
     /**

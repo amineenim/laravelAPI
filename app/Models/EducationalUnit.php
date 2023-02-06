@@ -18,4 +18,19 @@ class EducationalUnit extends Model
         'libelle_ue',
         'description'
     ];
+
+    public function cours()
+    {
+        return $this->hasMany(Cours::class,'id_ue','id_ue');
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+        self::deleting(function($educationalUnit){
+            $educationalUnit->cours->each(function($cours){
+                $cours->delete();
+            });
+        });
+    }
 }

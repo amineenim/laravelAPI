@@ -93,6 +93,16 @@ Route::group(['middleware' => ['auth:sanctum']],function(){
     Route::get('/newue',[UeController::class,'create']);
     // route that allows creationg a new UE resource 
     Route::post('/newue',[UeController::class,'store']);
+    // Route that allows an admin or teacher (directeur etudes) to view all Ues
+    Route::get('/ues',[UeController::class,'index']);
+    // Route that allows to view a unique Ue resource
+    Route::get('/ues/{ueId}',[UeController::class,'show']);
+    // Route that returns a form to edit a given Ue resource
+    Route::get('/ues/{ueId}/edit',[UeController::class,'edit']);
+    // Route that handles modifying a ue resource in storage 
+    Route::post('/ues/{ueId}',[UeController::class,'update']);
+    // Route that allows to delete a Ue resource 
+    Route::delete('/ues/{ueId}',[UeController::class,'destroy']);
 
     // handles logging out a user 
     Route::post('/logout',[AuthController::class,'logout']);

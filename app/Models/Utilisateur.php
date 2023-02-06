@@ -45,6 +45,18 @@ class Utilisateur extends Authenticatable
         return $correspondingTeacher ? true : false;
     }
 
+    public function isDirecteurEtudes()
+    {
+        // verify if the user is a teacher with responsibility 'directeur etudes'
+        $correspondingTeacher = Enseignant::find($this->id_utilisateur);
+        if(!$correspondingTeacher)
+        {
+            return false;
+        }
+        $responsability = $correspondingTeacher->responsabilite_ens;
+        return $responsability == 'directeur etudes' || $responsability == "directeur d'etudes";
+    }
+
     public static function boot()
     {
         parent::boot();

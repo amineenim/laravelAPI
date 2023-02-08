@@ -69,10 +69,25 @@ Route::group(['middleware' => ['auth:sanctum']],function(){
     Route::post('/enseignants/{coursId}/{studentId}/addgrade',[EnseignantController::class,"storeGrade"]);
     // handling enseignants 
     Route::resource('enseignants',EnseignantController::class);
+
+
+    //----- those routes route are only accessible by teacher 'directeur etudes' and admin ---//
     // route that displays form for creating a new edt resource 
     Route::get('/newedt',[EdtController::class,"create"]);
     // route that allows the creation of a an edt resource 
     Route::post('/newedt',[EdtController::class,'store']);
+    // route that returns all edt resources 
+    Route::get('/edt/all',[EdtController::class,'index']);
+    // route that allows to view a given edt event 
+    Route::get('/edt/{idEdt}',[EdtController::class,'show']);
+    // route that displays a form to edit an EDT event 
+    Route::get('/edt/{idEdt}/edit',[EdtController::class,'edit']);
+    // route that updates a given EDT resource in storage
+    Route::post('/edt/{idEdt}',[EdtController::class,'update']);
+    // route that allows to delete a given edt resource
+    Route::delete('/edt/{idEdt}',[EdtController::class,'destroy']);
+
+
 
     //route that dispalys a form so  new user can be created
     // the user is either a teacher or student  

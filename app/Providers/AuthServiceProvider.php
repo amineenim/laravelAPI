@@ -14,6 +14,8 @@ use App\Models\Enseignant;
 use App\Policies\EnseignantPolicy;
 use App\Models\EducationalUnit;
 use App\Policies\EducationalUnitPolicy;
+use App\Models\Edt;
+use App\Policies\EdtPolicy;
 
 
 class AuthServiceProvider extends ServiceProvider
@@ -28,6 +30,7 @@ class AuthServiceProvider extends ServiceProvider
         Etudiant::class   => EtudiantPolicy::class,
         Enseignant::class => EnseignantPolicy::class,
         EducationalUnit::class => EducationalUnitPolicy::class,
+        Edt::class    => EdtPolicy::class,
     ];
 
     /**

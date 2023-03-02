@@ -282,6 +282,7 @@ class EnseignantController extends Controller
         $mesCours = [];
         foreach($cours_enseignant as $cours)
         {
+            $cours_id = $cours->id_cours;
             $cours_name = $cours->nom_cours;
             $education_unit = EducationalUnit::find($cours->id_ue);
             $nom_unit_education = $education_unit->libelle_ue;
@@ -289,6 +290,7 @@ class EnseignantController extends Controller
             $nom_filiere = $filiere->nom_filiere;
             $niveau = $filiere->niveau;
             $moncours = (object)[
+                'id_cours' => $cours_id,
                 'nom_cours' => $cours_name,
                 'unite_enseignement' => $nom_unit_education,
                 'filiere'  => $nom_filiere,
@@ -353,7 +355,8 @@ class EnseignantController extends Controller
                     $filiere = $studentFiliere->nom_filiere;
                     $niveau = $studentFiliere->niveau;
                     $newStudent = (object)[
-                        'full name' => $nom_prenom_eleve,
+                        'id'       => $student->id_utilisateur,
+                        'fullName' => $nom_prenom_eleve,
                         'email'     => $email_eleve,
                         'filiere'   => $filiere,
                         'niveau'    => $niveau

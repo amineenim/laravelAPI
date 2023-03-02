@@ -21,7 +21,7 @@ class EtudiantPolicy
     {
         //determine wheter the user can see all students 
         // basically only an admin can have access to this page 
-        return $utilisateur->role === 'Admin' || $utilisateur->role ==='admin' 
+        return $utilisateur->role === 'Admin' || $utilisateur->role ==='admin' || $utilisateur->isTeacher()
                             ? Response::allow()
                             : Response ::deny('u must be an administrator') ;
     }

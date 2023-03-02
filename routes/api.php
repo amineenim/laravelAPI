@@ -120,7 +120,7 @@ Route::group(['middleware' => ['auth:sanctum']],function(){
     Route::delete('/ues/{ueId}',[UeController::class,'destroy']);
 
     // handles logging out a user 
-    Route::post('/logout',[AuthController::class,'logout']);
+    Route::post('/logout',[AuthController::class,'logout'])->middleware('auth:sanctum');
 
 });
 

@@ -21,7 +21,7 @@ class AuthController extends Controller
     {
         // validate the incoming resuqest's data 
         $validatedRequest = $request->validate([
-            'email' => 'required|email|exists:utilisateurs,email',
+            'email' => 'required|email',
             'password' => 'required|max:255'
         ]);
         if(!Auth::attempt($validatedRequest))
@@ -48,10 +48,12 @@ class AuthController extends Controller
         if($correspondingStudent)
         {
             $user = (object)[
+                'id'       => $id,
                 'fullName' => $userToAuthenticate->nom." ".$userToAuthenticate->prenom,
                 'email'    => $userToAuthenticate->email,
                 'tel'      => $userToAuthenticate->tel,
-                'user'     => 'etudiant'    
+                'user'     => 'etudiant',
+                'role'     => $userToAuthenticate->role  
             ];
             return response()->json([
                 'user' => $user,
@@ -61,10 +63,12 @@ class AuthController extends Controller
         if($correspondingTeacher)
         {
             $user = (object)[
+                'id'       => $id,
                 'fullName' => $userToAuthenticate->nom." ".$userToAuthenticate->prenom,
                 'email'    => $userToAuthenticate->email,
                 'tel'      => $userToAuthenticate->tel,
-                'user'     => 'enseignant'    
+                'user'     => 'enseignant',
+                'role'     => $userToAuthenticate->role     
             ];
             return response()->json([
                 'user' => $user,

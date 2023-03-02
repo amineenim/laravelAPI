@@ -327,12 +327,21 @@ class EtudiantController extends Controller
             $note = Note::where('id_utilisateur','=',$data)->where('id_cours',$id_cours)->get();
             // we access the first element which is the only one in array 
             //it's an object so we get the key "note" value 
-            $grade =  $note[0]["note"];
+            if(count($note)> 0)
+            {
+                $grade =  $note[0]["note"];
 
-            $cours_note = (object) [
-                "cours" => $nom_cours,
-                "note" => $grade
-            ];
+                $cours_note = (object) [
+                    "cours" => $nom_cours,
+                    "note" => $grade
+                ];
+            }
+            else {
+                $cours_note = (object) [
+                    "cours" => $nom_cours,
+                    "note" => "pas de saisie pour le moment"
+                ];
+            }
             array_push($studentGrades,$cours_note);
             
         }

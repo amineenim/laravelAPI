@@ -92,10 +92,10 @@ class EtudiantController extends Controller
     {
         // this function allows to create a new student resoource
         //verify if the currently authenticad user has authorization to create a new student
-        if($request->user()->cannot('create'))
+        if($request->user()->cannot('create',Etudiant::class))
         {
             return response()->json([
-                'message' => 'Not authorized !'
+                'message' => 'Not authorized !',
             ],403);
         }
         
@@ -137,9 +137,7 @@ class EtudiantController extends Controller
             'id_filiere'       => $id_filiere,
         ]);
 
-        return response()->json(
-            ['message' => "student created with succes !"]
-        );
+        return response()->json(['message' => "student created with succes !"],201);
     }
 
     /**

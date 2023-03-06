@@ -50,9 +50,9 @@ class EtudiantPolicy
     public function create(Utilisateur $utilisateur)
     {
         //only admin can create a new Etudiant resource 
-        return $utilisateur->role === 'Admin' || $utilisateur->role ==='admin' 
+        return $utilisateur->role === 'Admin' || $utilisateur->role === 'admin' 
                             ? Response::allow()
-                            : Response ::deny('u must be an administrator') ;
+                            : Response::deny('u must be an administrator') ;
 
     }
 

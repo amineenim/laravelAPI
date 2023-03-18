@@ -59,6 +59,7 @@ class EnseignantController extends Controller
             }
             //now that we have object $enseignantData storing data we can build a new object
             $teacher = (object)[
+                'id'        => $enseignant->id_utilisateur,
                 'full_Name' => $enseignantData->nom.' '.$enseignantData->prenom,
                 'email'     => $enseignantData->email,
                 'responsabilty' => $enseignant->responsabilite_ens,

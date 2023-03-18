@@ -41,6 +41,7 @@ class EtudiantController extends Controller
         {
             //query Utilisateurs table to get data about student 
             $studentData = Utilisateur::find($student->id_utilisateur);
+            $id = $student->id_utilisateur;
             $fullName = $studentData->nom.' '.$studentData->prenom;
             $email = $studentData->email;
             $phone = $studentData->tel;
@@ -50,6 +51,7 @@ class EtudiantController extends Controller
             $niveau = $filiere->niveau;
             // now that we have all needed data about student we put it in an object
             $etudiant = (object)[
+                'id'        => $id,
                 'full_Name' => $fullName,
                 'contact'   => $email,
                 'phone'     => $phone,
@@ -225,6 +227,32 @@ class EtudiantController extends Controller
             return response()->json([
                 'message' => 'Unauthorized action !'
             ],403);
+        }
+        // verify if the form is coming from admin 
+        if(isset($request['diplome']))
+        {
+            $validatedRequest = $request->validate([
+                'diplome' => 'required',
+                'filiere' => 'required',
+                'niveau'  => 'required'
+            ]);
+            //grab the id of filiere based on her name 
+            $filiere = Filiere::where('nom_filiere',$validatedRequest['filiere'])
+            ->where('niveau',$validatedRequest['niveau'])->first();
+            if(!$filiere){
+                return response()->json([
+                    'message' => 'data not corresponding to any of our filieres'
+                ]);
+            }
+            // update in storage 
+            $studentToUpdate = Etudiant::find($student->id_utilisateur);
+            $studentToUpdate->update([
+                'diplome_etudiant' => $validatedRequest['diplome'],
+                'id_filiere'       => $filiere->id_filiere,
+            ]);
+            return response()->json([
+                'success' => 'student updated with success'
+            ]);
         }
         // handles updating the student resource in storage 
         // a student can only modify it's email, password and phone 

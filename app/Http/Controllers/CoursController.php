@@ -41,6 +41,7 @@ class CoursController extends Controller
             $nom_ue = $educationaUnit->libelle_ue;
             $nom_filiere = Filiere::find($educationaUnit->id_filiere)->nom_filiere;
             $dataCourse = (object)[
+                'id_cours'  => $course->id_cours,
                 'nom_cours' => $course->nom_cours,
                 'unite_enseignement' => $nom_ue,
                 'filiere'     => $nom_filiere,

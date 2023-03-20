@@ -26,7 +26,7 @@ class EducationalUnitPolicy
         }
         $isAdmin = $utilisateur->role == 'admin' || $utilisateur->role == 'Admin';
         $secondCheck = $utilisateur->isDirecteurEtudes();
-        return $isAdmin || $secondCheck || $firstCheck ? true : false;
+        return $isAdmin || $secondCheck ? true : false;
     }
 
     /**

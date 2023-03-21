@@ -194,6 +194,21 @@ class EnseignantController extends Controller
         }
         
         $corresponding_user = Utilisateur::find($teacher->id_utilisateur);
+        // verify if the form data submissed contains responsabilite fiedl
+        if($request['responsabilite']){
+            //if we get this field it means the form is coming from the admin
+            $validatedRequest = $request->validate([
+                'responsabilite' => 'required|min : 5|max:255|regex:/^[a-zA-Z\s]*$/',
+                'vHoraire' => 'bail|required|integer|numeric',
+            ]);
+            $teacher->update([
+                'responsabilite_ens' =>$validatedRequest['responsabilite'],
+                'volume_horaire'     => $validatedRequest['vHoraire']
+            ]);
+            return response()->json([
+                'message' => 'enseignant updated with succes'
+               ],200);
+        }
        // teacher can only modify it's email and phone number 
        $validatedRequest = $request->validate([
         'email' => 'required|email',

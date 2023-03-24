@@ -31,6 +31,7 @@ class UeController extends Controller
         $data_for_ues = [];
         foreach($educationalUnits as $educationalUnit)
         {
+            $id = $educationalUnit->id_ue;
             $nom_ue = $educationalUnit->libelle_ue;
             $description = $educationalUnit->description;
             $filiere = Filiere::find($educationalUnit->id_filiere);
@@ -51,6 +52,7 @@ class UeController extends Controller
                 array_push($coursesForUe,$data_course);
             }
             $ue_data = (object)[
+                'id'    => $id,
                 'nom_ue'=> $nom_ue,
                 'description' => $description,
                 'filiere' => $correspondingFiliere,
@@ -251,29 +253,29 @@ class UeController extends Controller
         }
         //validate the data 
         $validatedRequest = $request->validate([
-            'nom' => 'bail|required|min:6|max:60|regex:/^[a-zA-Z0-9\s\']*$/|unique:ue,libelle_ue',
-            'description' =>  'bail|required|min:10:max:255|regex:/^[a-zA-Z0-9\s\'\.\,]*$/|',
-            'filiere'    => 'bail|required|exists:filieres,nom_filiere',
-            'niveau'     => 'bail|required|in:L,M,D'
+            'nom' => 'bail|required|min:6|max:60|regex:/^[a-zA-Z0-9éè\s\']*$/',
+            'description' =>  'bail|required|min:10|max:255|regex:/^[a-zA-Z0-9éè\s\'\.\,]*$/|',
         ]);
-        //verify if the given filiere and niveau actually correspond to a filiere 
-        $correspondingFiliere = Filiere::where('nom_filiere',$validatedRequest['filiere'])
-        ->where('niveau',$validatedRequest['niveau'])->first();
-        if(!$correspondingFiliere)
+        //verify if the name doesn't already correspond to an existing UE for that filiere
+        $corresponding_ue = EducationalUnit::where('libelle_ue',$validatedRequest['nom'])
+        ->where('id_filiere',$ue_to_modify->id_filiere)->first() ;
+        $corresponding_filiere = Filiere::find($ue_to_modify->id_filiere);
+        $nom_filiere = $corresponding_filiere->nom_filiere;
+        if($corresponding_ue->id_ue != $id)
         {
             return response()->json([
-                'message' => 'no corresponding filiere found, verify your data'
+                'message' => "unité d'enseignement avec le meme nom existe déja 
+                pour la filière $nom_filiere "
             ]);
         }
-        $id_filiere = $correspondingFiliere->id_filiere;
+        
         // all is set we can update in storage 
         $ue_to_modify->update([
-            'id_filiere' => $id_filiere,
             'libelle_ue' => $validatedRequest['nom'],
             'description'=> $validatedRequest['description']
         ]);
         return response()->json([
-            'message' => 'resource updated with success'
+            'success' => 'resource updated with success'
         ]);
 
     }

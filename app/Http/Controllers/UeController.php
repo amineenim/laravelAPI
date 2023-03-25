@@ -105,8 +105,8 @@ class UeController extends Controller
         $validatedRequest = $request->validate([
             'nom_filiere' => 'bail|required|exists:filieres,nom_filiere',
             'niveau'      => 'bail|required|in:L,M,D|',
-            'nom_ue'      => 'bail|required|regex:/^[a-zA-Z0-9\s\']*$/|min:6|max:60',
-            'description' =>  'bail|required|min:10:max:255|regex:/^[a-zA-Z0-9\s\'\.\,]*$/'
+            'nom_ue'      => 'bail|required|regex:/^[a-zA-Z0-9éè\s\']*$/|min:6|max:60',
+            'description' =>  'bail|required|min:10|max:255|regex:/^[a-zA-Z0-9éè\s\'\.\,]*$/'
         ]);
         //verify if the given "nom_filiere" and "niveau" correspond to an existing filiere 
         $existingFiliere = Filiere::where('nom_filiere',$validatedRequest['nom_filiere'])
@@ -298,7 +298,7 @@ class UeController extends Controller
         }
         $educationalUnit->delete();
         return response()->json([
-            'message' => "resource deleted with success !"
+            'success' => "resource deleted with success !"
         ],202);
     }
 }

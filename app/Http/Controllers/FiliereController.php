@@ -84,23 +84,24 @@ class FiliereController extends Controller
         }
         //this function hadnles creating a new filiere
         $validatedRequest = $request->validate([
-            'nom_filiere' => 'bail|required|regex:/^[a-zA-Z\s]*$/|min:10|max:60',
-            'description' => 'bail|required|regex:/^[a-zA-Z\s\']*$/|min:20|max:255',
+            'nom_filiere' => 'bail|required|regex:/^[a-zA-Zéè\s]*$/|min:10|max:60',
+            'description' => 'bail|required|regex:/^[a-zA-Zéè\s\']*$/|min:20|max:255',
             'niveau'      => 'bail|required|in:L,M,D',
             'nombre_annee' => 'bail|required|integer|between:1,4',
             'email_responsable' => 'bail|required|email|exists:utilisateurs,email'
         ]);
-        //verify if the validated email actually belongs to a teacher 
         $user = Utilisateur::where('email',$validatedRequest['email_responsable'])->first();
-        // grab the id of user and search for it in enseignants table
+        // grab the id of corresponding teacher
         $userId = $user->id_utilisateur;
-        $enseignantCollection = Enseignant::where('id_utilisateur',$userId)->get();
+        //  since in the front i have a select list with only teachers 
+        // i don't need no more this verification
+        /* $enseignantCollection = Enseignant::where('id_utilisateur',$userId)->get();
         if(! $enseignantCollection->contains('id_utilisateur',$userId))
         {
             return response()->json([
                 'message' => 'please verify the email !'
             ]);
-        }
+        }*/
         // now that all data is valid we can create a new record in filieres table
         $newRecord = Filiere::create([
             'nom_filiere' => $validatedRequest['nom_filiere'],
@@ -111,7 +112,7 @@ class FiliereController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'filiere créee avec succès'
+            'success' => 'filiere créee avec succès'
         ],201);
     }
 

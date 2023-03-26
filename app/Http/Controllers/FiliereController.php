@@ -160,21 +160,21 @@ class FiliereController extends Controller
         $filiere_to_update = Filiere::find($id);
         $validatedRequest = $request->validate([
             'nom_filiere' => 'bail|required|regex:/^[a-zA-Zéè\s]*$/|min:10|max:60',
-            'description' => 'bail|required|regex:/^[a-zA-Zéè\s\']*$/|min:20|max:255',
+            'description' => 'bail|required|regex:/^[a-zA-Zéè,.\s\']*$/|min:20|max:255',
             'nombre_annee' => 'bail|required|integer|between:1,4',
             'email_responsable' => 'bail|required|email|exists:utilisateurs,email'
         ]);
         // grab the id of the techer based on it's email
         $correspondingTeacher = Utilisateur::where('email',$validatedRequest['email_responsable'])->first();
         $filiere_to_update->update([
-            'nom_filiere' => $validatedRequest['nom-filiere'],
+            'nom_filiere' => $validatedRequest['nom_filiere'],
             'description' => $validatedRequest['description'],
             'nombre_annee' => $validatedRequest['nombre_annee'],
             'id_responsable' => $correspondingTeacher->id_utilisateur
         ]);
         return response()->json([
             'success' => 'resource updated with success'
-        ]);
+        ],200);
     }
 
     /**

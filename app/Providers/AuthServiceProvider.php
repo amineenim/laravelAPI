@@ -156,5 +156,10 @@ class AuthServiceProvider extends ServiceProvider
             return $user->role == 'admin' || $user->role == 'Admin';
         });
 
+        // Gate that allows an admin to update a filiere resource
+        Gate::define('update-filiere',function(Utilisateur $user){
+            return $user->role == 'admin' || $user->role == 'Admin' ;
+        });
+
     }
 }

@@ -30,6 +30,7 @@ class FiliereController extends Controller
         $filieresWithData = [];
         foreach($filieres as $filiere)
         {
+            $id = $filiere->id_filiere;
             $nom = $filiere->nom_filiere;
             $description = $filiere->description;
             $niveau = $filiere->niveau;
@@ -40,6 +41,7 @@ class FiliereController extends Controller
             $responsable_full_name = $user->nom." ".$user->prenom;
             $responsable_contact = $user->email;
             $filiereData = (object)[
+                'id'          => $id,
                 'nom_filiere' => $nom,
                 'description' => $description,
                 'niveau'      => $niveau,
@@ -147,7 +149,32 @@ class FiliereController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        //verify if the user is authorized to perform this action
+        if(!Gate::allows('update-filiere'))
+        {
+            return response()->json([
+                'message' => 'unauthorized action'
+            ],403);
+        }
+        // get the filiere to update based on it's id 
+        $filiere_to_update = Filiere::find($id);
+        $validatedRequest = $request->validate([
+            'nom_filiere' => 'bail|required|regex:/^[a-zA-Zéè\s]*$/|min:10|max:60',
+            'description' => 'bail|required|regex:/^[a-zA-Zéè\s\']*$/|min:20|max:255',
+            'nombre_annee' => 'bail|required|integer|between:1,4',
+            'email_responsable' => 'bail|required|email|exists:utilisateurs,email'
+        ]);
+        // grab the id of the techer based on it's email
+        $correspondingTeacher = Utilisateur::where('email',$validatedRequest['email_responsable'])->first();
+        $filiere_to_update->update([
+            'nom_filiere' => $validatedRequest['nom-filiere'],
+            'description' => $validatedRequest['description'],
+            'nombre_annee' => $validatedRequest['nombre_annee'],
+            'id_responsable' => $correspondingTeacher->id_utilisateur
+        ]);
+        return response()->json([
+            'success' => 'resource updated with success'
+        ]);
     }
 
     /**

@@ -103,6 +103,8 @@ Route::group(['middleware' => ['auth:sanctum']],function(){
     Route::delete('/admin/filieres/{filiereId}',[FiliereController::class,'destroy']);
     // allows an admin to create a new filiere 
     Route::post('/admin/newfiliere',[FiliereController::class,'store']);
+    // allows an admin to edit a given filiere resource in storage
+    Route::post('/admin/filieres/{filiereId}',[FilireController::class,'update']);
 
     //Route that returns form for creating a new UE resource
     Route::get('/newue',[UeController::class,'create']);

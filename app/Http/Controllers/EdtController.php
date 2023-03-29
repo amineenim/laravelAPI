@@ -261,7 +261,7 @@ class EdtController extends Controller
                     ]);
                 }
                 return response()->json([
-                    'message' => 'EDT event created succesefully !'
+                    'success' => 'EDT event created succesefully !'
                 ],201);
             }
             else 

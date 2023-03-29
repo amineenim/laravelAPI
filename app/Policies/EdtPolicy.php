@@ -58,7 +58,7 @@ class EdtPolicy
      */
     public function create(Utilisateur $utilisateur)
     {
-        //only a teacher 'directeur etudes' can create an Edt resource
+        //only a teacher 'directeur etudes' or admin can create an Edt resource
         $firstCheck = $utilisateur->isTeacher();
         if(!$firstCheck)
         {
@@ -66,7 +66,8 @@ class EdtPolicy
         }
         // check if the teacher has role 'directeur etudes'
         $secondCheck = $utilisateur->isDirecteurEtudes();
-        return $secondCheck;
+        $thirdCheck = $utilisateur->role == 'admin' || $utilisateur->role == 'Admin';
+        return ($secondCheck || $thirdCheck);
     }
 
     /**

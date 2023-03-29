@@ -168,7 +168,7 @@ class EdtController extends Controller
             'cours' => 'bail|required|exists:cours,nom_cours',
             'debut' => 'bail|required|date_format:Y-m-d H:i',
             'fin'   => 'bail|required|date_format:Y-m-d H:i|after:debut',
-            'type'  => 'bail|required|in:tp,td,cours,Tp,Td,Cours'
+            'type'  => 'bail|required|in:Tp,Td,Cours'
         ]);
         $date_debut_cours = Carbon::parse($validatedRequest['debut']);
         $date_fin_cours = Carbon::parse($validatedRequest['fin']);

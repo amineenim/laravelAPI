@@ -168,7 +168,7 @@ class EdtController extends Controller
             'cours' => 'bail|required|exists:cours,nom_cours',
             'debut' => 'bail|required|date_format:Y-m-d H:i',
             'fin'   => 'bail|required|date_format:Y-m-d H:i|after:debut',
-            'type'  => 'bail|required|in:Tp,Td,Cours'
+            'type'  => 'bail|required|in:tp,td,cours'
         ]);
         $date_debut_cours = Carbon::parse($validatedRequest['debut']);
         $date_fin_cours = Carbon::parse($validatedRequest['fin']);
@@ -195,7 +195,7 @@ class EdtController extends Controller
                 if(!$filiere)
                 {
                     return response()->json([
-                        'message' => 'no filiere corresponding to your data check again !'
+                        'message' => 'pas de filière correspondante, vérifiez le niveau et nom de filière !'
                     ]);
                 }
                 $id_filiere = $filiere->id_filiere;
@@ -261,20 +261,20 @@ class EdtController extends Controller
                     ]);
                 }
                 return response()->json([
-                    'success' => 'EDT event created succesefully !'
+                    'success' => 'Evenement EDT crée avec succès !'
                 ],201);
             }
             else 
             {
                 return response()->json([
-                    'message' => 'the start and end of course must be the same day ! invalid fin date'
+                    'message' => 'le début et la fin du cours ne correspondent pas au meme jour'
                 ]);
             }
         }
         else 
         {
             return response()->json([
-                'meesage' => 'date invalide, selectionnez la date entre '.$start_year." et ".$end_year
+                'message' => 'date invalide, selectionnez la date entre '.$start_year." et ".$end_year
             ]);
         }
              

@@ -36,10 +36,12 @@ class EdtController extends Controller
             $nom_filiere = $filiere->nom_filiere;
             $niveau = $filiere->niveau;
             $nom_cours = Cours::find($edt->id_cours)->nom_cours;
+            $id = $edt->id_edt;
             $debut = $edt->date_debut;
             $fin = $edt ->date_fin;
             $type_cours = $edt->type_cours;
             $data_edt = (object)[
+                'id'      => $id,
                 'filiere' => $nom_filiere,
                 'niveau'  => $niveau,
                 'cours'   => $nom_cours,
@@ -393,8 +395,6 @@ class EdtController extends Controller
         $validatedRequest = $request->validate([
             'filiere' => 'bail|required|exists:filieres,nom_filiere',
             'niveau'  => 'bail|required|in:L,M,D',
-            'ue'      => 'bail|required|exists:ue,libelle_ue',
-            'cours'   => 'required|exists:cours,nom_cours',
             'debut'   => 'required|date_format:Y-m-d H:i',
             'fin'     => 'required|date_format:Y-m-d H:i|after:debut',
             'type'    => 'required|in:cours,Cours,td,Td,tp,Tp'
@@ -442,12 +442,12 @@ class EdtController extends Controller
                 //grab the id of filiere based on it's name and level
                 $filiere = Filiere::where('nom_filiere',$validatedRequest['filiere'])
                 ->where('niveau',$validatedRequest['niveau'])->first();
-                if(!$filiere)
+                /*if(!$filiere)
                 {
                     return response()->json([
                         'message' => 'no filiere corresponding to your data check again !'
                     ]);
-                }
+                }*/
                 $id_filiere = $filiere->id_filiere;
                 //verify if the corresponding time is not already occupied for the given "filiere"
                 // get events for that day and filiere
@@ -492,7 +492,7 @@ class EdtController extends Controller
                     }
                 }
                 //grab the course based on it's name and ue_id to which it belongs
-                $ue = EducationalUnit::where('libelle_ue',$validatedRequest['ue'])
+                /*$ue = EducationalUnit::where('libelle_ue',$validatedRequest['ue'])
                 ->where('id_filiere',$id_filiere)->first();
                 if(!$ue)
                 {
@@ -503,23 +503,21 @@ class EdtController extends Controller
                 $id_ue =$ue->id_ue;
                 $course = Cours::where('nom_cours',$validatedRequest['cours'])
                 ->where('id_ue',$id_ue)->first();
-                $id_course = $course->id_cours;
+                $id_course = $course->id_cours;*/
 
                 $edtEvent->update([
-                    'id_filiere' => $id_filiere,
-                    'id_cours'   => $id_course,
                     'date_debut' => $validatedRequest['debut'],
                     'date_fin'   => $validatedRequest['fin'],
                     'type_cours' => $validatedRequest['type']
                 ]);
                 return response()->json([
-                    'message' => 'EDT event updated succesefully !'
+                    'success' => 'EDT event updated succesefully !'
                 ],200);
             }
             else 
             {
                 return response()->json([
-                    'message' => 'the start and end of course must be the same day ! invalid fin date'
+                    'message' => 'la date de début cours et fin cours ne correspondent pas à la meme journée !'
                 ]);
             }
         }

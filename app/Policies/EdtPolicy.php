@@ -79,13 +79,14 @@ class EdtPolicy
      */
     public function update(Utilisateur $utilisateur, Edt $edt)
     {
-        //only the teacher 'directeur etudes' can update a given edt resource 
+        //only the teacher 'directeur etudes' or admin can update a given edt resource 
         $firstCheck = $utilisateur->isTeacher();
         if(!$firstCheck){
             return false;
         }
         $secondCheck = $utilisateur->isDirecteurEtudes();
-        return $secondCheck;
+        $thirdCheck = $utilisateur->role == 'admin' || $utilisateur->role == 'Admin';
+        return ($secondCheck || $thirdCheck) ;
     }
 
     /**

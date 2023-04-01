@@ -98,14 +98,15 @@ class EdtPolicy
      */
     public function delete(Utilisateur $utilisateur, Edt $edt)
     {
-        //only a teacher 'directeur etudes' can delete a edt resource
+        //only a teacher 'directeur etudes' or admin can delete a edt resource
         $firstCheck = $utilisateur->isTeacher();
         if(!$firstCheck)
         {
             return false;
         }
         $secondCheck = $utilisateur->isDirecteurEtudes();
-        return $secondCheck;
+        $thirdCheck = $utilisateur->role == 'admin' || $utilisateur->role == 'Admin';
+        return ($secondCheck || $thirdCheck);
     }
 
     /**

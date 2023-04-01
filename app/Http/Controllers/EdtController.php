@@ -491,20 +491,6 @@ class EdtController extends Controller
                         ]);
                     }
                 }
-                //grab the course based on it's name and ue_id to which it belongs
-                /*$ue = EducationalUnit::where('libelle_ue',$validatedRequest['ue'])
-                ->where('id_filiere',$id_filiere)->first();
-                if(!$ue)
-                {
-                    return response()->json([
-                        'message' => 'no such ue for given filiere !'
-                    ]);
-                }
-                $id_ue =$ue->id_ue;
-                $course = Cours::where('nom_cours',$validatedRequest['cours'])
-                ->where('id_ue',$id_ue)->first();
-                $id_course = $course->id_cours;*/
-
                 $edtEvent->update([
                     'date_debut' => $validatedRequest['debut'],
                     'date_fin'   => $validatedRequest['fin'],
@@ -548,7 +534,7 @@ class EdtController extends Controller
         }
         $edtToDelete->delete();
         return response()->json([
-            'message' => 'deleted successfully'
-        ],403);
+            'success' => 'EDT Event supprimé avec succès'
+        ],200);
     }
 }

@@ -98,7 +98,7 @@ class CoursController extends Controller
         // now that we are sure that a teacher is the one creating the course
         //validate request data
         $validatedRequest = $request->validate([
-            'nom' => 'required|min:3|max:60|regex:/^[a-zA-Z\s]*$/',
+            'nom' => 'required|min:3|max:60|regex:/^[a-zA-Zéè\s]*$/',
             'nom_ue' => 'required|exists:App\Models\EducationalUnit,libelle_ue'
         ]);
         // now that we have valid data, we should grab the id based on the ue name to create a new course record
@@ -117,7 +117,7 @@ class CoursController extends Controller
             ]);
         }
         return response()->json([
-            'message' => 'course created with succes !'
+            'success' => 'course created with succes !'
         ]);
     }
 
@@ -181,7 +181,7 @@ class CoursController extends Controller
         }
         // validate request 
         $validatedRequest = $request->validate([
-            'nomCours' => 'required|min:3|max:60|regex:/^[a-zA-Z\s]*$/',
+            'nomCours' => 'required|min:3|max:60|regex:/^[a-zA-Zéè\s]*$/',
             'nomUe'    => 'required|exists:App\Models\EducationalUnit,libelle_ue'
         ]);
         // get the id of the ue based on it's name
@@ -193,7 +193,7 @@ class CoursController extends Controller
             'id_ue'     => $idUe
         ]);
         return response()->json([
-            'message' => 'updated with success'
+            'success' => 'updated with success'
         ]);
     }
 

@@ -463,7 +463,7 @@ class EnseignantController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'student added to course '. $course_name.' with succes'
+            'success' => 'Etudiant ajoué au Cours '. $course_name.' avec succèes'
         ],201);
         
     }
@@ -538,7 +538,7 @@ class EnseignantController extends Controller
             'note'           => $validatedRequest['note']
         ]);
         return response()->json([
-            "message" => "grade added with succes !"
+            "success" => "Note ajoutée avec succès!"
         ]);
     }
 }

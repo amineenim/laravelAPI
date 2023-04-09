@@ -383,7 +383,7 @@ class EnseignantController extends Controller
             }else {
                 return response()->json([
                     'message' => "you have no students for the course ".$nom_cours
-                ],200);
+                ],203);
             }
             
         }
